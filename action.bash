@@ -21,6 +21,8 @@ mkimg () {
 		popd
 	done
 
+	patch -d icingaweb2 -p0 < /icingaweb2.patch
+
 	docker build -f /Dockerfile -t "${TARGET}:$TAG" .
 
 	STATE_isPost=1 node /actions/checkout/dist/index.js

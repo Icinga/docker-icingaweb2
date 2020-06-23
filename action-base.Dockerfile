@@ -27,7 +27,7 @@ ADD action-base.list /etc/apt/sources.list.d/docker.list
 
 RUN apt-get update ;\
 	apt-get install --no-install-{recommends,suggests} -y \
-		composer docker-ce-cli git nodejs php7.3-zip ;\
+		composer docker-ce-cli git nodejs patch php7.3-zip ;\
 	apt-get clean ;\
 	rm -vrf /var/lib/apt/lists/*
 
