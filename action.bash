@@ -8,6 +8,19 @@ mkimg () {
 
 	node /actions/checkout/dist/index.js |grep -vFe ::add-matcher::
 
+	git archive --prefix=icingaweb2/ HEAD |tar -x
+	/get-mods.sh
+
+	for d in icingaweb2 icingaweb2/modules/*; do
+		pushd "$d"
+
+		if [ -e composer.json ]; then
+			composer install --no-dev --ignore-platform-reqs
+		fi
+
+		popd
+	done
+
 	docker build -f /Dockerfile -t "${TARGET}:$TAG" .
 
 	STATE_isPost=1 node /actions/checkout/dist/index.js
