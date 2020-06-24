@@ -27,6 +27,8 @@ EXPOSE 8080
 
 RUN ["chmod", "o+x", "/var/log/apache2"]
 RUN ["chown", "www-data:www-data", "/var/run/apache2"]
-RUN ["install", "-o", "www-data", "-g", "www-data", "-d", "/etc/icingaweb2"]
+RUN ["ln", "-vs", "/data/etc/icingaweb2", "/etc/icingaweb2"]
+RUN ["install", "-o", "www-data", "-g", "www-data", "-d", "/data"]
 
+VOLUME ["/data"]
 ENTRYPOINT ["/entrypoint"]

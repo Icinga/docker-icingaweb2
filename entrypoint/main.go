@@ -23,6 +23,15 @@ func entrypoint() error {
 		return nil
 	}
 
+	if os.Getpid() == 1 {
+		logf("info", "Initializing /data as we're the init process")
+
+		logf("debug", `Creating "/data/etc/icingaweb2"`)
+		if errMA := os.MkdirAll("/data/etc/icingaweb2", 0750); errMA != nil {
+			return errMA
+		}
+	}
+
 	path := os.Args[1]
 	if filepath.Base(path) == path {
 		logf("info", "Looking up %#v in $PATH", path)
