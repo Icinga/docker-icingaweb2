@@ -9,7 +9,7 @@ mkimg () {
 	node /actions/checkout/dist/index.js |grep -vFe ::add-matcher::
 
 	git archive --prefix=icingaweb2/ HEAD |tar -x
-	/get-mods.sh
+	/get-mods.sh "$1"
 
 	for d in icingaweb2 icingaweb2/modules/*; do
 		pushd "$d"
@@ -51,7 +51,7 @@ case "$GITHUB_EVENT_NAME" in
 	push)
 		grep -qEe '^refs/heads/.' <<<"$GITHUB_REF"
 		TAG="$(cut -d / -f 3- <<<"$GITHUB_REF")"
-		mkimg
+		mkimg "$TAG"
 		push
 		;;
 	release)
