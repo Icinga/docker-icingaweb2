@@ -1,3 +1,57 @@
+--- application/forms/Config/General/LoggingConfigForm.php
++++ application/forms/Config/General/LoggingConfigForm.php
+@@ -39,8 +39,8 @@ class LoggingConfigForm extends Form
+                 'label'         => $this->translate('Logging Type'),
+                 'description'   => $this->translate('The type of logging to utilize.'),
+                 'multiOptions'  => array(
+-                    'syslog'    => 'Syslog',
+                     'php'       => $this->translate('Webserver Log', 'app.config.logging.type'),
++                    'syslog'    => 'Syslog',
+                     'file'      => $this->translate('File', 'app.config.logging.type'),
+                     'none'      => $this->translate('None', 'app.config.logging.type')
+                 )
+@@ -94,7 +94,7 @@ class LoggingConfigForm extends Form
+                 )
+             );
+ 
+-            if (! isset($formData['logging_log']) || $formData['logging_log'] === 'syslog') {
++            if (isset($formData['logging_log']) && $formData['logging_log'] === 'syslog') {
+                 if (Platform::isWindows()) {
+                     /* @see https://secure.php.net/manual/en/function.openlog.php */
+                     $this->addElement(
+--- modules/setup/application/views/scripts/form/setup-welcome.phtml
++++ modules/setup/application/views/scripts/form/setup-welcome.phtml
+@@ -79,30 +79,9 @@ if (! (false === ($distro = Platform::getLinuxDistro(1)) || $distro === 'linux')
+           'To run this wizard a user needs to authenticate using a token which is usually'
+           . ' provided to him by an administrator who\'d followed the instructions below.'
+       ); ?></p>
+-      <p><?= $this->translate('In any case, make sure that all of the following applies to your environment:'); ?></p>
+-      <ul>
+-        <li><?= $this->translate('A system group called "icingaweb2" exists'); ?></li>
+-        <?php if ($phpUser): ?>
+-        <li><?= sprintf($this->translate('The user "%s" is a member of the system group "icingaweb2"'), $phpUser); ?></li>
+-        <?php else: ?>
+-        <li><?= $this->translate('Your webserver\'s user is a member of the system group "icingaweb2"'); ?></li>
+-        <?php endif ?>
+-      </ul>
+-      <?php if (! ($groupadd === null || $usermod === null)) { ?>
+       <div class="code">
+-        <span><?= $this->escape($groupadd . ';') ?></span>
+-        <span><?= $this->escape(sprintf($usermod, $phpUser ?: $webSrvUser) . ';') ?></span>
+-      </div>
+-      <?php } ?>
+-      <p><?= $this->translate('If you\'ve got the IcingaCLI installed you can do the following:'); ?></p>
+-      <div class="code">
+-        <span><?= $cliPath ? $cliPath : 'icingacli'; ?> setup config directory --group icingaweb2<?= $configDir !== '/etc/icingaweb2' ? ' --config ' . $configDir : ''; ?>;</span>
+         <span><?= $cliPath ? $cliPath : 'icingacli'; ?> setup token create;</span>
+       </div>
+-      <p><?= $this->translate('In case the IcingaCLI is missing you can create the token manually:'); ?></p>
+-      <div class="code">
+-        <span>su <?= $phpUser ?: $this->translate('<your-webserver-user>'); ?> -s /bin/sh -c "mkdir -m 2770 <?= dirname($setupTokenPath); ?>; chgrp icingaweb2 <?= dirname($setupTokenPath); ?>; head -c 12 /dev/urandom | base64 | tee <?= $setupTokenPath; ?>; chmod 0660 <?= $setupTokenPath; ?>;";</span>
+-      </div>
+       <p><?= sprintf(
+         $this->translate('Please see the %s for an extensive description on how to access and use this wizard.'),
+         '<a href="http://docs.icinga.com/">' . $this->translate('Icinga Web 2 documentation') . '</a>' // TODO: Add link to iw2 docs which points to the installation topic
 --- packages/files/apache/icingaweb2.conf
 +++ packages/files/apache/icingaweb2.conf
 @@ -1,4 +1,4 @@
