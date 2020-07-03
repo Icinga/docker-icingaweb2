@@ -9,18 +9,9 @@ mkimg () {
 	node /actions/checkout/dist/index.js |grep -vFe ::add-matcher::
 
 	git archive --prefix=icingaweb2/ HEAD |tar -x
+
 	/get-mods.sh "$1"
-
-	for d in icingaweb2 icingaweb2/modules/*; do
-		pushd "$d"
-
-		if [ -e composer.json ]; then
-			composer install --no-dev --ignore-platform-reqs
-		fi
-
-		popd
-	done
-
+	/composer.bash
 	patch -d icingaweb2 -p0 < /icingaweb2.patch
 
 	docker build -f /Dockerfile -t "${TARGET}:$TAG" .
