@@ -5,7 +5,40 @@ This image integrates [Icinga Web 2] into your [Docker] environment.
 ## Usage
 
 ```bash
+docker network create icinga
+
 docker run --rm -d \
+	--network icinga \
+	--name mariadb-icingaweb \
+	-e MYSQL_RANDOM_ROOT_PASSWORD=1 \
+	-e MYSQL_DATABASE=icingaweb \
+	-e MYSQL_USER=icingaweb \
+	-e MYSQL_PASSWORD=123456 \
+	mariadb
+
+docker run --rm -d \
+	--network icinga \
+	--name icinga-master \
+	-h icinga-master \
+	-e ICINGA_MASTER=1 \
+	icinga/icinga2
+
+docker run --rm -d \
+	--network icinga \
+	--name mariadb-icingadb \
+	-e MYSQL_RANDOM_ROOT_PASSWORD=1 \
+	-e MYSQL_DATABASE=icingadb \
+	-e MYSQL_USER=icingadb \
+	-e MYSQL_PASSWORD=123456 \
+	mariadb
+
+docker run --rm -d \
+	--network icinga \
+	--name redis-icingadb \
+	redis
+
+docker run --rm -d \
+	--network icinga \
 	-p 8080:8080 \
 	-v icingaweb:/data \
 	-e icingaweb.enabledModules=icingadb,ipl \
@@ -17,22 +50,22 @@ docker run --rm -d \
 	-e icingaweb.groups.icingaweb2.backend=db \
 	-e icingaweb.groups.icingaweb2.resource=icingaweb_db \
 	-e icingaweb.modules.icingadb.config.icingadb.resource=icingadb \
-	-e icingaweb.modules.icingadb.config.redis1.host=2001:db8::192.0.2.18 \
+	-e icingaweb.modules.icingadb.config.redis1.host=redis-icingadb \
 	-e icingaweb.modules.icingadb.config.redis1.port=6379 \
 	-e icingaweb.modules.monitoring.commandtransports.icinga2.transport=api \
-	-e icingaweb.modules.monitoring.commandtransports.icinga2.host=2001:db8::192.0.2.9 \
+	-e icingaweb.modules.monitoring.commandtransports.icinga2.host=icinga-master \
 	-e icingaweb.modules.monitoring.commandtransports.icinga2.username=root \
 	-e icingaweb.modules.monitoring.commandtransports.icinga2.password=123456 \
 	-e icingaweb.resources.icingaweb_db.type=db \
 	-e icingaweb.resources.icingaweb_db.db=mysql \
-	-e icingaweb.resources.icingaweb_db.host=2001:db8::192.0.2.13 \
+	-e icingaweb.resources.icingaweb_db.host=mariadb-icingaweb \
 	-e icingaweb.resources.icingaweb_db.dbname=icingaweb \
 	-e icingaweb.resources.icingaweb_db.username=icingaweb \
 	-e icingaweb.resources.icingaweb_db.password=123456 \
 	-e icingaweb.resources.icingaweb_db.charset=utf8 \
 	-e icingaweb.resources.icingadb.type=db \
 	-e icingaweb.resources.icingadb.db=mysql \
-	-e icingaweb.resources.icingadb.host=2001:db8::192.0.2.113 \
+	-e icingaweb.resources.icingadb.host=mariadb-icingadb \
 	-e icingaweb.resources.icingadb.dbname=icingadb \
 	-e icingaweb.resources.icingadb.username=icingaweb \
 	-e icingaweb.resources.icingadb.password=123456 \
