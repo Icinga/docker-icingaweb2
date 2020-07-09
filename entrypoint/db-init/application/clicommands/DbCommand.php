@@ -4,7 +4,9 @@ namespace Icinga\Module\Dockerentrypoint\Clicommands;
 
 use Icinga\Application\Config;
 use Icinga\Application\Icinga;
+use Icinga\Authentication\User\UserBackend;
 use Icinga\Cli\Command;
+use Icinga\Data\Filter\Filter;
 use Icinga\Data\ResourceFactory;
 use Icinga\Module\Setup\Utils\DbTool;
 use Icinga\Util\Json;
@@ -54,6 +56,23 @@ class DbCommand extends Command
             Config::module('setup')
                 ->get('schema', 'path', Icinga::app()->getBaseDir('etc/schema')) . "/{$db->dbType}.schema.sql"
         );
+    }
+
+    public function userAction()
+    {
+        $username = $this->params->getRequired('name');
+        $password = getenv('PASSWORD');
+        $backend = UserBackend::create($this->params->getRequired('backend'));
+
+        if ($backend->select()->where('user_name', $username)->count() > 0) {
+            $backend->update('user', ['password' => $password], Filter::where('user_name', $username));
+        } else {
+            $backend->insert('user', [
+                'user_name' => $username,
+                'password'  => $password,
+                'is_active' => 1
+            ]);
+        }
     }
 
     /**

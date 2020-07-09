@@ -47,6 +47,7 @@ func entrypoint() error {
 
 		cfgs := map[string]*ini.File{}
 		var enabledModules map[string]struct{} = nil
+		passwords := map[string]map[string]string{}
 
 	EnvVars:
 		for _, env := range os.Environ() {
@@ -73,19 +74,29 @@ func entrypoint() error {
 								}
 							}
 						} else if len(directive) >= 3 {
-							file := path.Join(directive[:len(directive)-2]...)
-							cfg, ok := cfgs[file]
+							if len(directive) == 3 && directive[0] == "passwords" {
+								users, ok := passwords[directive[1]]
+								if !ok {
+									users = map[string]string{}
+									passwords[directive[1]] = users
+								}
 
-							if !ok {
-								cfg = ini.Empty()
-								cfgs[file] = cfg
-							}
+								users[directive[2]] = kv[1]
+							} else {
+								file := path.Join(directive[:len(directive)-2]...)
+								cfg, ok := cfgs[file]
 
-							_, errNK := cfg.Section(directive[len(directive)-2]).NewKey(
-								strings.ToLower(directive[len(directive)-1]), kv[1],
-							)
-							if errNK != nil {
-								return errNK
+								if !ok {
+									cfg = ini.Empty()
+									cfgs[file] = cfg
+								}
+
+								_, errNK := cfg.Section(directive[len(directive)-2]).NewKey(
+									strings.ToLower(directive[len(directive)-1]), kv[1],
+								)
+								if errNK != nil {
+									return errNK
+								}
 							}
 						}
 					}
@@ -136,7 +147,7 @@ func entrypoint() error {
 			}
 		}
 
-		if errID := initDb(); errID != nil {
+		if errID := initDb(passwords); errID != nil {
 			return errID
 		}
 	}
@@ -157,7 +168,7 @@ func entrypoint() error {
 	return syscall.Exec(path, os.Args[1:], os.Environ())
 }
 
-func initDb() error {
+func initDb(passwords map[string]map[string]string) error {
 	logf("info", "Checking database resources used as backends")
 
 	{
@@ -205,6 +216,24 @@ func initDb() error {
 			cmd := exec.Command("icingacli", "dockerentrypoint", "db", "init", "--resource="+resource)
 			cmd.Stdout = os.Stderr
 			cmd.Stderr = os.Stderr
+
+			if errRn := cmd.Run(); errRn != nil {
+				return errRn
+			}
+		}
+	}
+
+	for backend, users := range passwords {
+		for name, password := range users {
+			logf(
+				"info", `Ensuring database authentication backend %#v to have a user %#v with the password "***"`,
+				backend, name,
+			)
+
+			cmd := exec.Command("icingacli", "dockerentrypoint", "db", "user", "--backend="+backend, "--name="+name)
+			cmd.Stdout = os.Stderr
+			cmd.Stderr = os.Stderr
+			cmd.Env = append(os.Environ(), "PASSWORD="+password)
 
 			if errRn := cmd.Run(); errRn != nil {
 				return errRn
