@@ -2,6 +2,8 @@ package main
 
 import (
 	"bufio"
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"github.com/go-ini/ini"
 	"io/ioutil"
@@ -15,6 +17,7 @@ import (
 )
 
 const confDir = "/data/etc/icingaweb2"
+const modsDir = "/usr/share/icingaweb2/modules"
 const dirMode = 0750
 
 var enModsDir = path.Join(confDir, "enabledModules")
@@ -44,6 +47,7 @@ func entrypoint() error {
 
 		cfgs := map[string]*ini.File{}
 		var enabledModules map[string]struct{} = nil
+		passwords := map[string]map[string]string{}
 
 	EnvVars:
 		for _, env := range os.Environ() {
@@ -70,19 +74,29 @@ func entrypoint() error {
 								}
 							}
 						} else if len(directive) >= 3 {
-							file := path.Join(directive[:len(directive)-2]...)
-							cfg, ok := cfgs[file]
+							if len(directive) == 3 && directive[0] == "passwords" {
+								users, ok := passwords[directive[1]]
+								if !ok {
+									users = map[string]string{}
+									passwords[directive[1]] = users
+								}
 
-							if !ok {
-								cfg = ini.Empty()
-								cfgs[file] = cfg
-							}
+								users[directive[2]] = kv[1]
+							} else {
+								file := path.Join(directive[:len(directive)-2]...)
+								cfg, ok := cfgs[file]
 
-							_, errNK := cfg.Section(directive[len(directive)-2]).NewKey(
-								strings.ToLower(directive[len(directive)-1]), kv[1],
-							)
-							if errNK != nil {
-								return errNK
+								if !ok {
+									cfg = ini.Empty()
+									cfgs[file] = cfg
+								}
+
+								_, errNK := cfg.Section(directive[len(directive)-2]).NewKey(
+									strings.ToLower(directive[len(directive)-1]), kv[1],
+								)
+								if errNK != nil {
+									return errNK
+								}
 							}
 						}
 					}
@@ -126,11 +140,15 @@ func entrypoint() error {
 			for mod := range enabledModules {
 				logf("trace1", "Enabling module %#v", mod)
 
-				errSl := os.Symlink(path.Join("/usr/share/icingaweb2/modules", mod), path.Join(enModsDir, mod))
+				errSl := os.Symlink(path.Join(modsDir, mod), path.Join(enModsDir, mod))
 				if errSl != nil {
 					return errSl
 				}
 			}
+		}
+
+		if errID := initDb(passwords); errID != nil {
+			return errID
 		}
 	}
 
@@ -148,6 +166,96 @@ func entrypoint() error {
 
 	logf("info", "Running %#v", path)
 	return syscall.Exec(path, os.Args[1:], os.Environ())
+}
+
+func initDb(passwords map[string]map[string]string) error {
+	logf("info", "Checking database resources used as backends")
+
+	{
+		enMod := path.Join(enModsDir, "dockerentrypoint")
+		if errSl := os.Symlink("/entrypoint-db-init", enMod); errSl != nil {
+			return errSl
+		}
+
+		defer os.Remove(enMod)
+	}
+
+	{
+		enMod := path.Join(enModsDir, "setup")
+
+		errSl := os.Symlink(path.Join(modsDir, "setup"), enMod)
+		if errSl != nil {
+			if le, ok := errSl.(*os.LinkError); !ok || !os.IsNotExist(le.Err) {
+				return errSl
+			}
+		}
+
+		if errSl == nil {
+			defer os.Remove(enMod)
+		}
+	}
+
+	var resources []string
+	if errIJ := icingacliJson(&resources, "dockerentrypoint", "db", "backends"); errIJ != nil {
+		return errIJ
+	}
+
+	for _, resource := range resources {
+		logf("debug", "Checking database resource %#v", resource)
+
+		var initialized uint8
+
+		errIJ := icingacliJson(&initialized, "dockerentrypoint", "db", "initialized", "--resource="+resource)
+		if errIJ != nil {
+			return errIJ
+		}
+
+		if initialized == 0 {
+			logf("debug", "Importing schema into database resource %#v", resource)
+
+			cmd := exec.Command("icingacli", "dockerentrypoint", "db", "init", "--resource="+resource)
+			cmd.Stdout = os.Stderr
+			cmd.Stderr = os.Stderr
+
+			if errRn := cmd.Run(); errRn != nil {
+				return errRn
+			}
+		}
+	}
+
+	for backend, users := range passwords {
+		for name, password := range users {
+			logf(
+				"info", `Ensuring database authentication backend %#v to have a user %#v with the password "***"`,
+				backend, name,
+			)
+
+			cmd := exec.Command("icingacli", "dockerentrypoint", "db", "user", "--backend="+backend, "--name="+name)
+			cmd.Stdout = os.Stderr
+			cmd.Stderr = os.Stderr
+			cmd.Env = append(os.Environ(), "PASSWORD="+password)
+
+			if errRn := cmd.Run(); errRn != nil {
+				return errRn
+			}
+		}
+	}
+
+	return nil
+}
+
+func icingacliJson(v interface{}, arg ...string) error {
+	cmd := exec.Command("icingacli", arg...)
+	var out bytes.Buffer
+
+	cmd.Stdout = &out
+	cmd.Stderr = os.Stderr
+
+	if errRn := cmd.Run(); errRn != nil {
+		return errRn
+	}
+
+	return json.Unmarshal(out.Bytes(), v)
 }
 
 var out = bufio.NewWriter(os.Stderr)

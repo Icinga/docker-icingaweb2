@@ -15,6 +15,7 @@ RUN ["locale-gen", "-j", "4"]
 RUN ["bash", "-exo", "pipefail", "-c", "export DEBIAN_FRONTEND=noninteractive; apt-get update; apt-get install --no-install-{recommends,suggests} -y apache2 libapache2-mod-php7.3 php-{imagick,redis} php7.3-{bcmath,bz2,common,curl,dba,enchant,gd,gmp,imap,interbase,intl,json,ldap,mbstring,mysql,odbc,opcache,pgsql,pspell,readline,recode,snmp,soap,sqlite3,sybase,tidy,xml,xmlrpc,xsl,zip}; apt-get clean; rm -vrf /var/lib/apt/lists/*"]
 
 COPY --from=entrypoint /entrypoint/entrypoint /entrypoint
+COPY entrypoint/db-init /entrypoint-db-init
 
 RUN ["a2enmod", "rewrite"]
 RUN ["ln", "-vsf", "/dev/stdout", "/var/log/apache2/access.log"]

@@ -9,6 +9,7 @@ docker run --rm -d \
 	-p 8080:8080 \
 	-v icingaweb:/data \
 	-e icingaweb.enabledModules=icingadb,ipl \
+	-e icingaweb.passwords.icingaweb2.icingaadmin=123456 \
 	-e icingaweb.authentication.icingaweb2.backend=db \
 	-e icingaweb.authentication.icingaweb2.resource=icingaweb_db \
 	-e icingaweb.config.global.config_backend=db \
@@ -58,6 +59,10 @@ To configure it, do one of the following:
 
 `icingaweb.enabledModules` is a comma-separated set
 of the only modules to be enabled.
+
+Variables like `icingaweb.passwords.backend.user=pass`
+ensures a user "user" with the password "pass" to be present
+in the database authentication backend "backend".
 
 Variables like `icingaweb.dir.subdir.file.section.option=value` create .ini
 files like `/data/etc/icingaweb2/dir/subdir/file.ini` with content like this:
