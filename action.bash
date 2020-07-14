@@ -34,12 +34,9 @@ push () {
 }
 
 case "$GITHUB_EVENT_NAME" in
-	pull_request)
-		grep -qEe '^refs/pull/[0-9]+' <<<"$GITHUB_REF"
-		TAG="pr$(grep -oEe '[0-9]+' <<<"$GITHUB_REF")"
-		mkimg
-		;;
-	push)
+	workflow_dispatch)
+        ;&
+	schedule)
 		grep -qEe '^refs/heads/.' <<<"$GITHUB_REF"
 		TAG="$(cut -d / -f 3- <<<"$GITHUB_REF")"
 		mkimg "$TAG"
