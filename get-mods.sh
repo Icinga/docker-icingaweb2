@@ -20,7 +20,7 @@ get_special () {
 				REF="$(get_tag)"
 				;;
 			*)
-				if [ -n "$BRANCH" ]; then
+				if [ -n "$BRANCH" ] && git -C dockerweb2-temp show -s --oneline "$BRANCH"; then
 					REF="$BRANCH"
 				else
 					REF="$(get_tag)"

@@ -33,21 +33,16 @@ push () {
 	fi
 }
 
+re_docker_tag="^refs/(heads|tags)/([^/]+|[a-z]+/(.*))$"
+
 case "$GITHUB_EVENT_NAME" in
-	pull_request)
-		grep -qEe '^refs/pull/[0-9]+' <<<"$GITHUB_REF"
-		TAG="pr$(grep -oEe '[0-9]+' <<<"$GITHUB_REF")"
-		mkimg
-		;;
-	push)
-		grep -qEe '^refs/heads/.' <<<"$GITHUB_REF"
-		TAG="$(cut -d / -f 3- <<<"$GITHUB_REF")"
-		mkimg "$TAG"
-		push
-		;;
-	release)
-		grep -qEe '^refs/tags/v[0-9]' <<<"$GITHUB_REF"
-		TAG="$(cut -d v -f 2- <<<"$GITHUB_REF")"
+	workflow_dispatch|schedule|release)
+		[[ "$GITHUB_REF" =~ $re_docker_tag ]]
+		if [ -n "${BASH_REMATCH[3]}" ]; then
+			TAG="${BASH_REMATCH[3]}"
+		else
+			TAG="${BASH_REMATCH[2]}"
+		fi
 		mkimg
 		push
 		;;
