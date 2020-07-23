@@ -1,3 +1,5 @@
+<!-- Icinga Web 2 Docker image | (c) 2020 Icinga GmbH | GPLv2+ -->
+
 # Icinga Web 2 - Docker image
 
 This image integrates [Icinga Web 2] into your [Docker] environment.
