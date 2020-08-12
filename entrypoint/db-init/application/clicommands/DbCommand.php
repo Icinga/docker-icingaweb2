@@ -1,4 +1,5 @@
 <?php
+// Icinga Web 2 Docker image | (c) 2020 Icinga GmbH | GPLv2+
 
 namespace Icinga\Module\Dockerentrypoint\Clicommands;
 

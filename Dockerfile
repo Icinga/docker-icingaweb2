@@ -1,3 +1,5 @@
+# Icinga Web 2 Docker image | (c) 2020 Icinga GmbH | GPLv2+
+
 FROM icinga/icingaweb2-deps
 
 COPY icingaweb2 /usr/share/icingaweb2
