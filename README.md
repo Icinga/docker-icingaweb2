@@ -77,6 +77,17 @@ option = value
 Consult the [Icinga Web 2 configuration documentation]
 on which .ini files there are.
 
+## Build it yourself
+
+```bash
+git clone https://github.com/Icinga/icingaweb2.git
+#pushd icingaweb2
+#git checkout v2.9.0
+#popd
+
+./build.bash ./icingaweb2
+```
+
 [Icinga Web 2]: https://github.com/Icinga/icingaweb2
 [Docker]: https://www.docker.com
 [Icinga Web 2 configuration documentation]: https://icinga.com/docs/icingaweb2/latest/doc/03-Configuration/
