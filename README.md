@@ -80,7 +80,7 @@ on which .ini files there are.
 ## Build it yourself
 
 ```bash
-git clone https://github.com/Icinga/icingaweb2.git
+git clone https://github.com/Icinga/docker-icingaweb2
 #pushd icingaweb2
 #git checkout v2.9.0
 #popd
