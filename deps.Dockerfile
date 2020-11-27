@@ -24,6 +24,7 @@ RUN ["perl", "-pi", "-e", "if (/Listen/) { s/80/8080/ }", "/etc/apache2/ports.co
 RUN ["perl", "-pi", "-e", "if (/VirtualHost/) { s/80/8080/ }", "/etc/apache2/sites-available/000-default.conf"]
 EXPOSE 8080
 
+RUN ["chmod", "-R", "u=rwX,go=rX", "/entrypoint-db-init"]
 RUN ["chmod", "o+x", "/var/log/apache2"]
 RUN ["chown", "www-data:www-data", "/var/run/apache2"]
 RUN ["ln", "-vs", "/data/etc/icingaweb2", "/etc/icingaweb2"]
