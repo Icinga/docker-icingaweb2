@@ -11,7 +11,7 @@ get_tag () {
 get_special () {
 	if [ ! -e "icingaweb2/modules/$2" ]; then
 		rm -rf dockerweb2-temp
-		git clone --bare "https://github.com/Icinga/${1}.git" dockerweb2-temp
+		git clone --bare "https://github.com/${1}.git" dockerweb2-temp
 
 		case "$2" in
 			icingadb)
@@ -35,7 +35,7 @@ get_special () {
 }
 
 get_mod () {
-	get_special "icingaweb2-module-$1" "$1"
+	get_special "Icinga/icingaweb2-module-$1" "$1"
 }
 
 get_mod audit
@@ -54,3 +54,4 @@ get_mod reactbundle
 get_mod reporting
 get_mod vspheredb
 get_mod x509
+#get_special Mikesch-mp/icingaweb2-module-grafana grafana
