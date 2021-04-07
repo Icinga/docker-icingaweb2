@@ -6,6 +6,8 @@ This image integrates [Icinga Web 2] into your [Docker] environment.
 
 ## Usage
 
+* specify docker image:tag as defined in dockerhub -> https://hub.docker.com/r/icinga/icingaweb2/tags
+
 ```bash
 docker run --rm -d \
 	-p 8080:8080 \
@@ -43,7 +45,7 @@ docker run --rm -d \
 	-e icingaweb.roles.Administrators.users=icingaadmin \
 	-e icingaweb.roles.Administrators.permissions='*' \
 	-e icingaweb.roles.Administrators.groups=Administrators \
-	icinga/icingaweb2
+	icinga/icingaweb2:master
 ```
 
 The container listens on port 8080 and expects a volume on `/data`.
