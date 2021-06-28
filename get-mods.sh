@@ -17,7 +17,7 @@ get_special () {
 			icingadb)
 				REF=2c0662c420617712bd26234da550dcf8d4afcdb8 # v1.0.0-rc1+
 				;;
-			incubator|ipl|reactbundle)
+			incubator)
 				REF="$(get_tag)"
 				;;
 			*)
@@ -48,9 +48,7 @@ get_mod graphite
 get_special icingadb-web icingadb
 get_mod idoreports
 get_mod incubator
-get_mod ipl
 get_mod pdfexport
-get_mod reactbundle
 get_mod reporting
 get_mod vspheredb
 get_mod x509
