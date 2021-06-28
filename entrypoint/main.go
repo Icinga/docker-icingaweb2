@@ -264,7 +264,7 @@ var out = bufio.NewWriter(os.Stderr)
 
 func logf(severity, format string, a ...interface{}) {
 	_, _ = fmt.Fprintf(out, "[%s] ", time.Now().Format("Mon Jan 2 15:04:05.999999999 2006"))
-	_, _ = fmt.Fprintf(out, "[docker_entrypoint:%s] [pid %d] DOCKERE: ", severity, os.Getpid())
+	_, _ = fmt.Fprintf(out, "[docker_entrypoint:%s] [pid %d] DCKRENT: ", severity, os.Getpid())
 	_, _ = fmt.Fprintf(out, format, a...)
 
 	_, _ = fmt.Fprintln(out)
