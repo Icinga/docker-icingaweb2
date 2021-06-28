@@ -40,9 +40,11 @@ func entrypoint() error {
 	if os.Getpid() == 1 {
 		logf("info", "Initializing /data as we're the init process")
 
-		logf("debug", "Creating %#v", enModsDir)
-		if errMA := os.MkdirAll(enModsDir, dirMode); errMA != nil {
-			return errMA
+		for _, dir := range []string{enModsDir, "/data/var/lib/icingaweb2"} {
+			logf("debug", "Creating %#v", dir)
+			if errMA := os.MkdirAll(dir, dirMode); errMA != nil {
+				return errMA
+			}
 		}
 
 		logf("debug", "Translating env vars to .ini config")

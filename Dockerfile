@@ -28,6 +28,7 @@ RUN ["chmod", "-R", "u=rwX,go=rX", "/entrypoint-db-init"]
 RUN ["chmod", "o+x", "/var/log/apache2"]
 RUN ["chown", "www-data:www-data", "/var/run/apache2"]
 RUN ["ln", "-vs", "/data/etc/icingaweb2", "/etc/icingaweb2"]
+RUN ["ln", "-vs", "/data/var/lib/icingaweb2", "/var/lib/icingaweb2"]
 RUN ["install", "-o", "www-data", "-g", "www-data", "-d", "/data"]
 
 ENTRYPOINT ["/entrypoint"]
