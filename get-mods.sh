@@ -9,15 +9,15 @@ get_tag () {
 }
 
 get_special () {
-	if [ ! -e "icingaweb2/modules/$2" ]; then
+	if [ ! -e "$2" ]; then
 		rm -rf dockerweb2-temp
 		git clone --bare "https://github.com/Icinga/${1}.git" dockerweb2-temp
 
 		case "$2" in
-			icingadb)
+			icingaweb2/modules/icingadb)
 				REF=2c0662c420617712bd26234da550dcf8d4afcdb8 # v1.0.0-rc1+
 				;;
-			incubator)
+			icingaweb2/modules/incubator)
 				REF="$(get_tag)"
 				;;
 			*)
@@ -29,15 +29,25 @@ get_special () {
 				;;
 		esac
 
-		git -C dockerweb2-temp archive "--prefix=icingaweb2/modules/${2}/" "$REF" |tar -x
+		git -C dockerweb2-temp archive "--prefix=${2}/" "$REF" |tar -x
 		rm -rf dockerweb2-temp
 	fi
 }
 
-get_mod () {
-	get_special "icingaweb2-module-$1" "$1"
+get_lib () {
+	get_special "icinga-php-$1" "icinga-php/$2"
 }
 
+get_altname () {
+	get_special "$1" "icingaweb2/modules/$2"
+}
+
+get_mod () {
+	get_altname "icingaweb2-module-$1" "$1"
+}
+
+get_lib library ipl
+get_lib thirdparty vendor
 get_mod audit
 get_mod aws
 get_mod businessprocess
@@ -45,7 +55,7 @@ get_mod cube
 get_mod director
 get_mod fileshipper
 get_mod graphite
-get_special icingadb-web icingadb
+get_altname icingadb-web icingadb
 get_mod idoreports
 get_mod incubator
 get_mod pdfexport
