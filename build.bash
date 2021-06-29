@@ -16,8 +16,7 @@ fi
 IW2SRC="$(realpath "$IW2SRC")"
 BLDCTX="$(realpath "$(dirname "$0")")"
 
-docker build -f "${BLDCTX}/action-base.Dockerfile" -t icinga/icingaweb2-builder "$BLDCTX"
-docker build -f "${BLDCTX}/deps.Dockerfile" -t icinga/icingaweb2-deps "$BLDCTX"
+docker build -f "${BLDCTX}/action.Dockerfile" -t icinga/icingaweb2-builder "$BLDCTX"
 
 docker run --rm -i \
 	-v "${IW2SRC}:/iw2src:ro" \
@@ -34,5 +33,6 @@ cd /iw2cp
 /bldctx/composer.bash
 patch -d icingaweb2 -p0 < /bldctx/icingaweb2.patch
 
+cp -r /entrypoint .
 docker build -f /bldctx/Dockerfile -t icinga/icingaweb2 .
 EOF
