@@ -18,9 +18,6 @@ get_special () {
 		git clone --bare "https://github.com/Icinga/${1}.git" dockerweb2-temp
 
 		case "$2" in
-			icingaweb2/modules/icingadb)
-				REF=2c0662c420617712bd26234da550dcf8d4afcdb8 # v1.0.0-rc1+
-				;;
 			icingaweb2/modules/incubator)
 				REF="$(get_tag)"
 				;;
@@ -29,6 +26,10 @@ get_special () {
 					REF="$BRANCH"
 				else
 					REF="$(get_tag)"
+
+					if [ "$2" = icingaweb2/modules/icingadb ] && [ "$REF" = 'v1.0.0-rc1' ]; then
+						REF=2c0662c420617712bd26234da550dcf8d4afcdb8 # v1.0.0-rc1+
+					fi
 				fi
 				;;
 		esac
