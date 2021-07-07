@@ -5,7 +5,11 @@ set -exo pipefail
 BRANCH="$1"
 
 get_tag () {
-	git -C dockerweb2-temp tag --sort=-version:refname |grep -vFe - |head -n 1
+	if git -C dockerweb2-temp tag |grep -qvFe -; then # ex. RCs
+		git -C dockerweb2-temp tag --sort=-version:refname |grep -vFe - |head -n 1
+	else
+		git -C dockerweb2-temp tag --sort=-version:refname |grep -Fe - |head -n 1
+	fi
 }
 
 get_special () {
