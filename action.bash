@@ -31,7 +31,7 @@ push () {
 	fi
 }
 
-re_docker_tag="^refs/(heads|tags)/([^/]+|[a-z]+/(.*))$"
+re_docker_tag="^refs/(heads|tags)/v?([^/]+|[a-z]+/(.*))$"
 
 case "$GITHUB_EVENT_NAME" in
 	workflow_dispatch|schedule|release)
