@@ -1,6 +1,6 @@
 # Icinga Web 2 Docker image | (c) 2020 Icinga GmbH | GPLv2+
 
-FROM golang:buster as entrypoint
+FROM golang:bullseye as entrypoint
 
 COPY entrypoint /entrypoint
 
@@ -8,9 +8,9 @@ WORKDIR /entrypoint
 RUN ["go", "build", "."]
 
 
-FROM debian:buster-slim
+FROM debian:bullseye-slim
 
-RUN ["bash", "-exo", "pipefail", "-c", "export DEBIAN_FRONTEND=noninteractive; apt-get update; apt-get install --no-install-{recommends,suggests} -y apache2 ca-certificates libapache2-mod-php7.3 locales-all php-{imagick,redis} php7.3-{bcmath,bz2,common,curl,dba,enchant,gd,gmp,imap,interbase,intl,json,ldap,mbstring,mysql,odbc,opcache,pgsql,pspell,readline,recode,snmp,soap,sqlite3,sybase,tidy,xml,xmlrpc,xsl,zip}; apt-get clean; rm -vrf /var/lib/apt/lists/*"]
+RUN ["bash", "-exo", "pipefail", "-c", "export DEBIAN_FRONTEND=noninteractive; apt-get update; apt-get install --no-install-{recommends,suggests} -y apache2 ca-certificates libapache2-mod-php7.4 locales-all php-{imagick,redis} php7.4-{bcmath,bz2,common,curl,dba,enchant,gd,gmp,imap,interbase,intl,json,ldap,mbstring,mysql,odbc,opcache,pgsql,pspell,readline,snmp,soap,sqlite3,sybase,tidy,xml,xmlrpc,xsl,zip}; apt-get clean; rm -vrf /var/lib/apt/lists/*"]
 
 COPY --from=entrypoint /entrypoint/entrypoint /entrypoint
 COPY entrypoint/db-init /entrypoint-db-init
