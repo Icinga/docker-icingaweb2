@@ -31,6 +31,29 @@ push () {
 	fi
 }
 
+# Matches Git references that start with `refs/` and then continue with `heads/` or `tags/`.
+# An optional `v` that follows is ignored. Then the tag or branch name is captured. These may
+# be of the following forms and what is captured of them:
+#
+#  - <form> -> g1(´heads´ or ´tags´),g2,g3
+#
+#  - v1 -> ,1,
+#  - v1.1 -> ,1.1,
+#  - v1.2-1 -> ,1.2-1,
+#  - 2.0.0 -> ,2.0.0,
+#  - master -> ,master,
+#  - main -> ,main,
+#  - something -> ,something,
+#  - verbose -> ,erbose,
+#  - vault -> ,ault,
+#  - fix/error-123 -> ,fix,error-123
+#  - fix/mistake-456 -> ,fix,mistake-456
+#  - fix/climate -> ,fix,climate
+#  - bugfix/legacy -> ,bugfix,legacy
+#  - feature/green-energy -> ,feature,green-energy
+#  - feature/verbosity -> ,feature,verbosity
+#  - viehture/bullshit -> ,viehture,bullshit
+#
 re_docker_tag="^refs/(heads|tags)/v?([^/]+|[a-z]+/(.*))$"
 
 case "$GITHUB_EVENT_NAME" in
