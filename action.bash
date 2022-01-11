@@ -46,13 +46,13 @@ push () {
 #  - something -> ,something,
 #  - verbose -> ,erbose,
 #  - vault -> ,ault,
-#  - fix/error-123 -> ,fix,error-123
-#  - fix/mistake-456 -> ,fix,mistake-456
-#  - fix/climate -> ,fix,climate
-#  - bugfix/legacy -> ,bugfix,legacy
-#  - feature/green-energy -> ,feature,green-energy
-#  - feature/verbosity -> ,feature,verbosity
-#  - viehture/bullshit -> ,viehture,bullshit
+#  - fix/error-123 -> ,fix/error-123,error-123
+#  - fix/mistake-456 -> ,fix/mistake-456,mistake-456
+#  - fix/climate -> ,fix/climate,climate
+#  - bugfix/legacy -> ,bugfix/legacy,legacy
+#  - feature/green-energy -> ,feature/green-energy,green-energy
+#  - feature/verbosity -> ,feature/verbosity,verbosity
+#  - viehture/bullshit -> ,viehture/bullshit,bullshit
 #
 re_docker_tag="^refs/(heads|tags)/v?([^/]+|[a-z]+/(.*))$"
 
