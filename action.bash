@@ -64,7 +64,12 @@ case "$GITHUB_EVENT_NAME" in
 		else
 			TAG="${BASH_REMATCH[2]}"
 		fi
-		mkimg
+
+		if [ "${BASH_REMATCH[1]}" = heads ]; then
+			BRANCH="${BASH_REMATCH[2]}"
+		fi
+
+		mkimg "$BRANCH"
 		push
 		;;
 	*)
