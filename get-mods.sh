@@ -24,8 +24,8 @@ get_special () {
 			*)
 				if [ "$BRANCH" = master ] && [[ "$2" == icinga-php/* ]]; then
 					REF=snapshot/nightly
-				elif [ -n "$BRANCH" ] && git -C dockerweb2-temp show -s --oneline "$BRANCH"; then
-					REF="$BRANCH"
+				elif [ -n "$BRANCH" ]; then
+					REF=HEAD
 				else
 					REF="$(get_tag)"
 
