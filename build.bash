@@ -3,7 +3,7 @@
 set -exo pipefail
 
 IW2SRC="$1"
-export MODS_BRANCH="$2"
+export BUILD_MODE="${2:-release}"
 
 if [ -z "$IW2SRC" ]; then
 	cat <<EOF >&2
@@ -22,14 +22,14 @@ docker run --rm -i \
 	-v "${IW2SRC}:/iw2src:ro" \
 	-v "${BLDCTX}:/bldctx:ro" \
 	-v /var/run/docker.sock:/var/run/docker.sock \
-	-e MODS_BRANCH \
+	-e BUILD_MODE \
 	icinga/icingaweb2-builder bash <<EOF
 set -exo pipefail
 
 git -C /iw2src archive --prefix=iw2cp/icingaweb2/ HEAD |tar -xC /
 cd /iw2cp
 
-/bldctx/get-mods.sh "$MODS_BRANCH"
+/bldctx/get-mods.sh "$BUILD_MODE"
 /bldctx/composer.bash
 patch -d icingaweb2 -p0 < /bldctx/icingaweb2.patch
 
