@@ -6,12 +6,13 @@ TARGET=icinga/icingaweb2
 
 mkimg () {
 	test -n "$TAG"
+	test -n "$MODE"
 
 	node /actions/checkout/dist/index.js |grep -vFe ::add-matcher::
 
 	git archive --prefix=icingaweb2/ HEAD |tar -x
 
-	/get-mods.sh "$1"
+	/get-mods.sh "$MODE"
 	/composer.bash
 	patch -d icingaweb2 -p0 < /icingaweb2.patch
 
@@ -31,39 +32,24 @@ push () {
 	fi
 }
 
-# Matches Git references that start with `refs/` and then continue with `heads/` or `tags/`.
-# An optional `v` that follows is ignored. Then the tag or branch name is captured. These may
-# be of the following forms and what is captured of them:
-#
-#  - <form> -> g1(´heads´ or ´tags´),g2,g3
-#
-#  - v1 -> ,1,
-#  - v1.1 -> ,1.1,
-#  - v1.2-1 -> ,1.2-1,
-#  - 2.0.0 -> ,2.0.0,
-#  - master -> ,master,
-#  - main -> ,main,
-#  - something -> ,something,
-#  - verbose -> ,erbose,
-#  - vault -> ,ault,
-#  - fix/error-123 -> ,fix/error-123,error-123
-#  - fix/mistake-456 -> ,fix/mistake-456,mistake-456
-#  - fix/climate -> ,fix/climate,climate
-#  - bugfix/legacy -> ,bugfix/legacy,legacy
-#  - feature/green-energy -> ,feature/green-energy,green-energy
-#  - feature/verbosity -> ,feature/verbosity,verbosity
-#  - viehture/bullshit -> ,viehture/bullshit,bullshit
-#
-re_docker_tag="^refs/(heads|tags)/v?([^/]+|[a-z]+/(.*))$"
-
 case "$GITHUB_EVENT_NAME" in
 	workflow_dispatch|schedule|release)
-		[[ "$GITHUB_REF" =~ $re_docker_tag ]]
-		if [ -n "${BASH_REMATCH[3]}" ]; then
-			TAG="${BASH_REMATCH[3]}"
-		else
-			TAG="${BASH_REMATCH[2]}"
-		fi
+		case "$GITHUB_REF" in
+			refs/tags/v*)
+				MODE=release
+				TAG=${GITHUB_REF#refs/tags/v}
+				;;
+			refs/heads/*)
+				MODE=snapshot
+				TAG=${GITHUB_REF#refs/heads/}
+				# Remove everything up to the first slash to remove prefixes like "feature/"
+				TAG=${TAG#*/}
+				;;
+			*)
+				echo "Unknown ref: $GITHUB_REF" >&2
+				false
+				;;
+		esac
 		mkimg
 		push
 		;;

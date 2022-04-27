@@ -2,7 +2,15 @@
 # Icinga Web 2 Docker image | (c) 2020 Icinga GmbH | GPLv2+
 set -exo pipefail
 
-BRANCH="$1"
+usage() {
+	cat >&2 <<EOF
+Usage: get-mods.sh <release|snapshot>
+
+  release:  download the latest release version of all external modules
+  snapshot: download a snapshot/development version of all external modules
+EOF
+	exit 1
+}
 
 get_tag () {
 	if git -C dockerweb2-temp tag |grep -qvFe -; then # ex. RCs
@@ -17,22 +25,25 @@ get_special () {
 		rm -rf dockerweb2-temp
 		git clone --bare "https://github.com/Icinga/${1}.git" dockerweb2-temp
 
-		case "$2" in
-			icingaweb2/modules/incubator)
+		case "$MODE" in
+			release)
 				REF="$(get_tag)"
 				;;
-			*)
-				if [ "$BRANCH" = master ] && [[ "$2" == icinga-php/* ]]; then
-					REF=snapshot/nightly
-				elif [ -n "$BRANCH" ] && git -C dockerweb2-temp show -s --oneline "$BRANCH"; then
-					REF="$BRANCH"
-				else
-					REF="$(get_tag)"
-
-					if [ "$2" = icingaweb2/modules/icingadb ] && [ "$REF" = 'v1.0.0-rc1' ]; then
-						REF=2c0662c420617712bd26234da550dcf8d4afcdb8 # v1.0.0-rc1+
-					fi
-				fi
+			snapshot)
+				case "$2" in
+					icingaweb2/modules/incubator)
+						# "HINT: Do NOT install the GIT master, it will not work!"
+						# https://github.com/Icinga/icingaweb2-module-incubator/blob/master/README.md
+						REF="$(get_tag)"
+						;;
+					icinga-php/*)
+						# Special branch that contains vendored dependencies missing in HEAD
+						REF=snapshot/nightly
+						;;
+					*)
+						REF=HEAD
+						;;
+				esac
 				;;
 		esac
 
@@ -52,6 +63,12 @@ get_altname () {
 get_mod () {
 	get_altname "icingaweb2-module-$1" "$1"
 }
+
+MODE="$1"
+case "$MODE" in
+	release|snapshot) ;;
+	*) usage ;;
+esac
 
 get_lib library ipl
 get_lib thirdparty vendor
