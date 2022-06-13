@@ -10,7 +10,7 @@ This image integrates [Icinga Web 2] into your [Docker] environment.
 docker run --rm -d \
 	-p 8080:8080 \
 	-v icingaweb:/data \
-	-e icingaweb.enabledModules=icingadb,ipl \
+	-e icingaweb.enabledModules=icingadb \
 	-e icingaweb.passwords.icingaweb2.icingaadmin=123456 \
 	-e icingaweb.authentication.icingaweb2.backend=db \
 	-e icingaweb.authentication.icingaweb2.resource=icingaweb_db \
