@@ -32,14 +32,14 @@ docker run --rm -d \
 	-e icingaweb.resources.icingaweb_db.dbname=icingaweb \
 	-e icingaweb.resources.icingaweb_db.username=icingaweb \
 	-e icingaweb.resources.icingaweb_db.password=123456 \
-	-e icingaweb.resources.icingaweb_db.charset=utf8 \
+	-e icingaweb.resources.icingaweb_db.charset=utf8mb4 \
 	-e icingaweb.resources.icingadb.type=db \
 	-e icingaweb.resources.icingadb.db=mysql \
 	-e icingaweb.resources.icingadb.host=2001:db8::192.0.2.113 \
 	-e icingaweb.resources.icingadb.dbname=icingadb \
 	-e icingaweb.resources.icingadb.username=icingaweb \
 	-e icingaweb.resources.icingadb.password=123456 \
-	-e icingaweb.resources.icingadb.charset=utf8 \
+	-e icingaweb.resources.icingadb.charset=utf8mb4 \
 	-e icingaweb.roles.Administrators.users=icingaadmin \
 	-e icingaweb.roles.Administrators.permissions='*' \
 	-e icingaweb.roles.Administrators.groups=Administrators \
