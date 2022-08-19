@@ -35,6 +35,7 @@ ENTRYPOINT ["/entrypoint"]
 
 COPY icingaweb2 /usr/share/icingaweb2
 COPY icinga-php /usr/share/icinga-php
+COPY icinga-L10n /usr/share/icinga-L10n
 COPY php.ini /etc/php/7.4/cli/conf.d/99-docker.ini
 
 RUN ["ln", "-vs", "/usr/share/icingaweb2/packages/files/apache/icingaweb2.conf", "/etc/apache2/conf-enabled/"]
