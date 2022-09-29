@@ -33,6 +33,6 @@ cd /iw2cp
 /bldctx/composer.bash
 patch -d icingaweb2 -p0 < /bldctx/icingaweb2.patch
 
-cp -r /entrypoint .
+cp -r /entrypoint /bldctx/php.ini .
 docker build -f /bldctx/Dockerfile -t icinga/icingaweb2 .
 EOF
