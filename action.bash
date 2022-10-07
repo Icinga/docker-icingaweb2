@@ -16,7 +16,7 @@ mkimg () {
 	/composer.bash
 	patch -d icingaweb2 -p0 < /icingaweb2.patch
 
-	cp -r /entrypoint .
+	cp -r /entrypoint /php.ini .
 	docker build -f /Dockerfile -t "${TARGET}:$TAG" .
 
 	STATE_isPost=1 node /actions/checkout/dist/index.js

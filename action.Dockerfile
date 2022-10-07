@@ -33,7 +33,7 @@ RUN apt-get update ;\
 
 COPY --from=clone /actions /actions
 
-COPY action.bash composer.bash Dockerfile get-mods.sh icingaweb2.patch /
+COPY action.bash composer.bash Dockerfile get-mods.sh icingaweb2.patch php.ini /
 COPY entrypoint /entrypoint
 
 CMD ["/action.bash"]
