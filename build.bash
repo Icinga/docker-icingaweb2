@@ -4,6 +4,8 @@ set -exo pipefail
 
 IW2SRC="$1"
 export BUILD_MODE="${2:-release}"
+ACTION="$3"
+TAG="${4:-test}"
 
 if [ -z "$IW2SRC" ]; then
 	cat <<EOF >&2
@@ -23,4 +25,18 @@ if ! docker buildx version; then
 	false
 fi
 
-docker buildx build --load -t icinga/icingaweb2 --build-context "icingaweb2-git=$(realpath "$IW2SRC")/.git" --build-arg "BUILD_MODE=$BUILD_MODE" "$(realpath "$(dirname "$0")")"
+OUR_DIR="$(realpath "$(dirname "$0")")"
+COMMON_ARGS=(-t "icinga/icingaweb2:$TAG" --build-context "icingaweb2-git=$(realpath "$IW2SRC")/.git" --build-arg "BUILD_MODE=$BUILD_MODE" "$OUR_DIR")
+BUILDX=(docker buildx build --platform "$(cat "${OUR_DIR}/platforms.txt")")
+
+case "$ACTION" in
+	all)
+		"${BUILDX[@]}" "${COMMON_ARGS[@]}"
+		;;
+	push)
+		"${BUILDX[@]}" --push "${COMMON_ARGS[@]}"
+		;;
+	*)
+		docker buildx build --load "${COMMON_ARGS[@]}"
+		;;
+esac
