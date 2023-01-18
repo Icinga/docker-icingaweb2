@@ -53,29 +53,3 @@ Icinga Web 2 Docker image | (c) 2020 Icinga GmbH | GPLv2+
        <p><?= sprintf(
          $this->translate('Please see the %s for an extensive description on how to access and use this wizard.'),
          '<a href="http://docs.icinga.com/">' . $this->translate('Icinga Web 2 documentation') . '</a>' // TODO: Add link to iw2 docs which points to the installation topic
---- packages/files/apache/icingaweb2.conf
-+++ packages/files/apache/icingaweb2.conf
-@@ -1,4 +1,4 @@
--Alias /icingaweb2 "/usr/share/icingaweb2/public"
-+Alias / "/usr/share/icingaweb2/public/"
- 
- # Remove comments if you want to use PHP FPM and your Apache version is older than 2.4
- #<IfVersion < 2.4>
-@@ -34,7 +34,7 @@ Alias /icingaweb2 "/usr/share/icingaweb2/public"
- 
-     <IfModule mod_rewrite.c>
-         RewriteEngine on
--        RewriteBase /icingaweb2/
-+        RewriteBase /
-         RewriteCond %{REQUEST_FILENAME} -s [OR]
-         RewriteCond %{REQUEST_FILENAME} -l [OR]
-         RewriteCond %{REQUEST_FILENAME} -d
-@@ -44,7 +44,7 @@ Alias /icingaweb2 "/usr/share/icingaweb2/public"
- 
-     <IfModule !mod_rewrite.c>
-         DirectoryIndex error_norewrite.html
--        ErrorDocument 404 /icingaweb2/error_norewrite.html
-+        ErrorDocument 404 /error_norewrite.html
-     </IfModule>
- 
- # Remove comments if you want to use PHP FPM and your Apache version
