@@ -11,6 +11,7 @@ use Icinga\Data\Filter\Filter;
 use Icinga\Data\ResourceFactory;
 use Icinga\Module\Setup\Utils\DbTool;
 use Icinga\Util\Json;
+use PDOException;
 
 class DbCommand extends Command
 {
@@ -91,6 +92,20 @@ class DbCommand extends Command
                     break;
                 case 'pgsql':
                     $config['port'] = 5432;
+            }
+        }
+
+        for ($i = 0; $i < 100; ++$i) {
+            try {
+                (new DbTool($config))->checkConnectivity();
+                break;
+            } catch (PDOException $e) {
+                fprintf(
+                    STDERR, "[%s] [docker_entrypoint:error] [pid %d] DOCKERE: Can't connect to database: %s\n",
+                    date('D M j H:i:s.u Y'), getmypid(), $e->getMessage()
+                );
+
+                sleep(3);
             }
         }
 
