@@ -8,9 +8,20 @@ WORKDIR /entrypoint
 RUN ["go", "build", "."]
 
 
+FROM debian:bullseye-slim as etc-locale-gen
+
+RUN ["bash", "-exo", "pipefail", "-c", "export DEBIAN_FRONTEND=noninteractive; apt-get update; apt-get install --no-install-{recommends,suggests} -y locales; apt-get clean; rm -vrf /var/lib/apt/lists/*"]
+
+COPY icingaweb2 /usr/share/icingaweb2
+COPY icinga-L10n /usr/share/icinga-L10n
+COPY uncomment-locales.pl /
+
+RUN ["/uncomment-locales.pl", "/etc/locale.gen"]
+
+
 FROM debian:bullseye-slim
 
-RUN ["bash", "-exo", "pipefail", "-c", "export DEBIAN_FRONTEND=noninteractive; apt-get update; apt-get install --no-install-{recommends,suggests} -y apache2 ca-certificates libapache2-mod-php7.4 libldap-common locales-all php-{imagick,redis} php7.4-{bcmath,bz2,common,curl,dba,enchant,gd,gmp,imap,interbase,intl,json,ldap,mbstring,mysql,odbc,opcache,pgsql,pspell,readline,snmp,soap,sqlite3,sybase,tidy,xml,xmlrpc,xsl,zip}; apt-get clean; rm -vrf /var/lib/apt/lists/*"]
+RUN ["bash", "-exo", "pipefail", "-c", "export DEBIAN_FRONTEND=noninteractive; apt-get update; apt-get install --no-install-{recommends,suggests} -y apache2 ca-certificates libapache2-mod-php7.4 libldap-common locales php-{imagick,redis} php7.4-{bcmath,bz2,common,curl,dba,enchant,gd,gmp,imap,interbase,intl,json,ldap,mbstring,mysql,odbc,opcache,pgsql,pspell,readline,snmp,soap,sqlite3,sybase,tidy,xml,xmlrpc,xsl,zip}; apt-get clean; rm -vrf /var/lib/apt/lists/*"]
 
 COPY --from=entrypoint /entrypoint/entrypoint /entrypoint
 COPY entrypoint/db-init /entrypoint-db-init
@@ -37,6 +48,9 @@ COPY icingaweb2 /usr/share/icingaweb2
 COPY icinga-php /usr/share/icinga-php
 COPY icinga-L10n /usr/share/icinga-L10n
 COPY php.ini /etc/php/7.4/cli/conf.d/99-docker.ini
+
+COPY --from=etc-locale-gen /etc/locale.gen /etc/
+RUN ["locale-gen", "-j", "4"]
 
 RUN ["ln", "-vs", "/usr/share/icingaweb2/packages/files/apache/icingaweb2.conf", "/etc/apache2/conf-enabled/"]
 RUN ["ln", "-vs", "/usr/share/icingaweb2/bin/icingacli", "/usr/local/bin/"]
