@@ -31,7 +31,6 @@ cd /iw2cp
 
 /bldctx/get-mods.sh "$BUILD_MODE"
 /bldctx/composer.bash
-patch -d icingaweb2 -p0 < /bldctx/icingaweb2.patch
 
 cp -r /entrypoint /bldctx/php.ini .
 docker build -f /bldctx/Dockerfile -t icinga/icingaweb2 .
