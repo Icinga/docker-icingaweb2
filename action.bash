@@ -14,7 +14,6 @@ mkimg () {
 
 	/get-mods.sh "$MODE"
 	/composer.bash
-	patch -d icingaweb2 -p0 < /icingaweb2.patch
 
 	cp -r /entrypoint /php.ini .
 	docker build -f /Dockerfile -t "${TARGET}:$TAG" .
