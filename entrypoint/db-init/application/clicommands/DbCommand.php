@@ -56,7 +56,7 @@ class DbCommand extends Command
 
         $db->import(
             Config::module('setup')
-                ->get('schema', 'path', Icinga::app()->getBaseDir('etc/schema')) . "/{$db->dbType}.schema.sql"
+                ->get('schema', 'path', Icinga::app()->getBaseDir('schema')) . "/{$db->dbType}.schema.sql"
         );
     }
 
