@@ -18,6 +18,7 @@ import (
 	"time"
 )
 
+const wwwdataUid = 33
 const dataVolume = "/data"
 const modsDir = "/usr/share/icingaweb2/modules"
 const dirMode = 0750
@@ -37,6 +38,24 @@ func entrypoint() error {
 	if len(os.Args) < 2 {
 		logf("warn", "Nothing to do.")
 		return nil
+	}
+
+	if os.Getuid() == 0 {
+		logf("info", "Giving %s to the www-data user as we're root", dataVolume)
+
+		if err := os.Chown(dataVolume, wwwdataUid, wwwdataUid); err != nil {
+			return err
+		}
+
+		logf("info", "Dropping privileges as we're root")
+
+		if err := syscall.Setgid(wwwdataUid); err != nil {
+			return err
+		}
+
+		if err := syscall.Setuid(wwwdataUid); err != nil {
+			return err
+		}
 	}
 
 	if os.Getpid() == 1 {
