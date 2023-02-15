@@ -41,6 +41,5 @@ COPY php.ini /etc/php/7.4/cli/conf.d/99-docker.ini
 RUN ["ln", "-vs", "/usr/share/icingaweb2/bin/icingacli", "/usr/local/bin/"]
 RUN ["icingacli", "setup", "config", "webserver", "apache", "--path=/", "--file=/etc/apache2/conf-enabled/icingaweb2.conf"]
 
-USER www-data
 ENV ICINGAWEB_OFFICIAL_DOCKER_IMAGE 1
 CMD ["bash", "-eo", "pipefail", "-c", ". /etc/apache2/envvars; exec apache2 -DFOREGROUND"]
