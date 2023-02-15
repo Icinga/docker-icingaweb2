@@ -18,9 +18,11 @@ import (
 	"time"
 )
 
-const confDir = "/data/etc/icingaweb2"
+const dataVolume = "/data"
 const modsDir = "/usr/share/icingaweb2/modules"
 const dirMode = 0750
+
+var confDir = path.Join(dataVolume, "etc", "icingaweb2")
 
 var enModsDir = path.Join(confDir, "enabledModules")
 
@@ -38,9 +40,9 @@ func entrypoint() error {
 	}
 
 	if os.Getpid() == 1 {
-		logf("info", "Initializing /data as we're the init process")
+		logf("info", "Initializing %s as we're the init process", dataVolume)
 
-		for _, dir := range []string{enModsDir, "/data/var/lib/icingaweb2"} {
+		for _, dir := range []string{enModsDir, path.Join(dataVolume, "var", "lib", "icingaweb2")} {
 			logf("debug", "Creating %#v", dir)
 			if errMA := os.MkdirAll(dir, dirMode); errMA != nil {
 				return errMA
