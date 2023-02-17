@@ -57,6 +57,21 @@ func entrypoint() error {
 			return nil
 		})
 
+		for _, stdio := range [...]string{"/dev/stdout", "/dev/stderr"} {
+			logf("info", "Giving %s to the www-data user as we're root", stdio)
+
+			file, err := os.Open(stdio)
+			if err != nil {
+				return err
+			}
+
+			if err := syscall.Fchown(int(file.Fd()), wwwdataUid, wwwdataUid); err != nil {
+				return err
+			}
+
+			_ = file.Close()
+		}
+
 		logf("info", "Dropping privileges as we're root")
 
 		if err := syscall.Setgid(wwwdataUid); err != nil {
