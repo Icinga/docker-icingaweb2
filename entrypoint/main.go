@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/go-ini/ini"
+	"io/fs"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -43,7 +44,14 @@ func entrypoint() error {
 	if os.Getuid() == 0 {
 		logf("info", "Giving %s to the www-data user as we're root", dataVolume)
 
-		if err := os.Chown(dataVolume, wwwdataUid, wwwdataUid); err != nil {
+		err := filepath.WalkDir(dataVolume, func(path string, _ fs.DirEntry, err error) error {
+			if err != nil {
+				return err
+			}
+
+			return os.Lchown(path, wwwdataUid, wwwdataUid)
+		})
+		if err != nil {
 			return err
 		}
 
