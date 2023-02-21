@@ -13,25 +13,28 @@ EOF
 	false
 fi
 
+if ! docker version; then
+	echo 'Docker not found' >&2
+	false
+fi
+
+if ! docker buildx version; then
+	echo '"docker buildx" not found (see https://docs.docker.com/buildx/working-with-buildx/ )' >&2
+	false
+fi
+
 IW2SRC="$(realpath "$IW2SRC")"
-BLDCTX="$(realpath "$(dirname "$0")")"
+OUR_DIR="$(realpath "$(dirname "$0")")"
+OUR_FILES="$(mktemp -d)"
 
-docker build -f "${BLDCTX}/action.Dockerfile" -t icinga/icingaweb2-builder "$BLDCTX"
+trap "rm -rf $OUR_FILES" EXIT
 
-docker run --rm -i \
-	-v "${IW2SRC}:/iw2src:ro" \
-	-v "${BLDCTX}:/bldctx:ro" \
-	-v /var/run/docker.sock:/var/run/docker.sock \
-	-e BUILD_MODE \
-	icinga/icingaweb2-builder bash <<EOF
-set -exo pipefail
+pushd "$OUR_FILES"
 
-git -C /iw2src archive --prefix=iw2cp/icingaweb2/ HEAD |tar -xC /
-cd /iw2cp
+git -C "$IW2SRC" archive --prefix=icingaweb2/ HEAD |tar -x
+"${OUR_DIR}/get-mods.sh" "$BUILD_MODE"
+docker run --rm -iv "$(pwd):/iw2" -w /iw2 composer:lts bash <"${OUR_DIR}/composer.bash"
 
-/bldctx/get-mods.sh "$BUILD_MODE"
-/bldctx/composer.bash
+popd
 
-cp -r /entrypoint /bldctx/php.ini .
-docker build -f /bldctx/Dockerfile -t icinga/icingaweb2 .
-EOF
+docker buildx build --load -t icinga/icingaweb2 --build-context "icinga-files=$OUR_FILES" "$OUR_DIR"

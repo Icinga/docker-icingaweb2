@@ -15,6 +15,8 @@ jobs:
       - name: Checkout HEAD
         uses: actions/checkout@v1
 
+      - run: docker buildx create --use
+
       - name: Icinga Web 2
         run: git clone https://github.com/Icinga/icingaweb2.git
 

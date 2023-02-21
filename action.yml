@@ -1,6 +1,41 @@
 # Icinga Web 2 Docker image | (c) 2020 Icinga GmbH | GPLv2+
 
 name: Icinga Web 2 Docker image
+inputs:
+  dockerhub-token:
+    default: ''
 runs:
-  using: docker
-  image: action.Dockerfile
+  using: composite
+  steps:
+    - uses: actions/checkout@v3
+
+    - shell: bash
+      run: docker buildx create --use
+
+    - if: inputs.dockerhub-token != ''
+      env:
+        PW: ${{ inputs.dockerhub-token }}
+      shell: bash
+      run: |
+        docker login -u icingaadmin --password-stdin <<<"$PW"
+
+    - if: github.event_name == 'release'
+      shell: bash
+      run: |
+        TAG="$(tr -d v <<<'${{ github.ref_name }}')"
+        '${{ github.action_path }}/build.bash' .
+        docker tag icinga/icingaweb2 "icinga/icingaweb2:$TAG"
+        docker push "icinga/icingaweb2:$TAG"
+
+    - if: github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
+      shell: bash
+      run: |
+        TAG="$(tr / - <<<'${{ github.ref_name }}')"
+        '${{ github.action_path }}/build.bash' . snapshot
+        docker tag icinga/icingaweb2 "icinga/icingaweb2:$TAG"
+        docker push "icinga/icingaweb2:$TAG"
+
+    - if: github.event_name != 'release' && github.event_name != 'workflow_dispatch' && github.event_name != 'schedule'
+      shell: bash
+      run: |
+        '${{ github.action_path }}/build.bash' . snapshot
