@@ -27,8 +27,6 @@ IW2SRC="$(realpath "$IW2SRC")"
 OUR_DIR="$(realpath "$(dirname "$0")")"
 OUR_FILES="$(mktemp -d)"
 
-trap "rm -rf $OUR_FILES" EXIT
-
 pushd "$OUR_FILES"
 
 git -C "$IW2SRC" archive --prefix=icingaweb2/ HEAD |tar -x
