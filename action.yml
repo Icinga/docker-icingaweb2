@@ -27,7 +27,7 @@ runs:
         docker tag icinga/icingaweb2 "icinga/icingaweb2:$TAG"
         docker push "icinga/icingaweb2:$TAG"
 
-    - if: github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
+    - if: github.event_name == 'workflow_dispatch' || github.event_name == 'schedule' || github.event_name == 'push'
       shell: bash
       run: |
         TAG=master
@@ -35,7 +35,7 @@ runs:
         docker tag icinga/icingaweb2 "icinga/icingaweb2:$TAG"
         docker push "icinga/icingaweb2:$TAG"
 
-    - if: github.event_name != 'release' && github.event_name != 'workflow_dispatch' && github.event_name != 'schedule'
+    - if: github.event_name != 'release' && github.event_name != 'workflow_dispatch' && github.event_name != 'schedule' && github.event_name != 'push'
       shell: bash
       run: |
         '${{ github.action_path }}/build.bash' . snapshot
