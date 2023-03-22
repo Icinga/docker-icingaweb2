@@ -30,7 +30,7 @@ runs:
     - if: github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
       shell: bash
       run: |
-        TAG="$(tr / - <<<'${{ github.ref_name }}')"
+        TAG=master
         '${{ github.action_path }}/build.bash' . snapshot
         docker tag icinga/icingaweb2 "icinga/icingaweb2:$TAG"
         docker push "icinga/icingaweb2:$TAG"
