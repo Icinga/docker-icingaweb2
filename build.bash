@@ -13,25 +13,14 @@ EOF
 	false
 fi
 
-IW2SRC="$(realpath "$IW2SRC")"
-BLDCTX="$(realpath "$(dirname "$0")")"
+if ! docker version; then
+	echo 'Docker not found' >&2
+	false
+fi
 
-docker build -f "${BLDCTX}/action.Dockerfile" -t icinga/icingaweb2-builder "$BLDCTX"
+if ! docker buildx version; then
+	echo '"docker buildx" not found (see https://docs.docker.com/buildx/working-with-buildx/ )' >&2
+	false
+fi
 
-docker run --rm -i \
-	-v "${IW2SRC}:/iw2src:ro" \
-	-v "${BLDCTX}:/bldctx:ro" \
-	-v /var/run/docker.sock:/var/run/docker.sock \
-	-e BUILD_MODE \
-	icinga/icingaweb2-builder bash <<EOF
-set -exo pipefail
-
-git -C /iw2src archive --prefix=iw2cp/icingaweb2/ HEAD |tar -xC /
-cd /iw2cp
-
-/bldctx/get-mods.sh "$BUILD_MODE"
-/bldctx/composer.bash
-
-cp -r /entrypoint /bldctx/php.ini .
-docker build -f /bldctx/Dockerfile -t icinga/icingaweb2 .
-EOF
+docker buildx build --load -t icinga/icingaweb2 --build-context "icingaweb2-git=$(realpath "$IW2SRC")/.git" --build-arg "BUILD_MODE=$BUILD_MODE" "$(realpath "$(dirname "$0")")"
