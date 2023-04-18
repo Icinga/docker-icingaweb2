@@ -12,11 +12,16 @@ EOF
 	exit 1
 }
 
+get_first_line() {
+  head -n 1
+  cat >/dev/null
+}
+
 get_tag () {
-	if git -C dockerweb2-temp tag |grep -qvFe -; then # ex. RCs
-		git -C dockerweb2-temp tag --sort=-version:refname |grep -vFe - |head -n 1
+	if git -C dockerweb2-temp tag |grep -vFe - >/dev/null; then # ex. RCs
+		git -C dockerweb2-temp tag --sort=-version:refname |grep -vFe - |get_first_line
 	else
-		git -C dockerweb2-temp tag --sort=-version:refname |grep -Fe - |head -n 1
+		git -C dockerweb2-temp tag --sort=-version:refname |grep -Fe - |get_first_line
 	fi
 }
 

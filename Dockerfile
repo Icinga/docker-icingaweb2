@@ -8,6 +8,23 @@ WORKDIR /entrypoint
 RUN ["go", "build", "."]
 
 
+FROM composer:lts as usr-share
+SHELL ["/bin/bash", "-exo", "pipefail", "-c"]
+
+RUN ["mkdir", "/usr-share"]
+WORKDIR /usr-share
+
+ARG BUILD_MODE
+COPY get-mods.sh /
+RUN /get-mods.sh $BUILD_MODE
+
+COPY composer.bash /
+RUN ["/composer.bash"]
+
+COPY --from=icingaweb2-git . /icingaweb2-src/.git
+RUN git -C /icingaweb2-src archive --prefix=icingaweb2/ HEAD |tar -x
+
+
 FROM debian:bullseye-slim
 
 RUN ["bash", "-exo", "pipefail", "-c", "export DEBIAN_FRONTEND=noninteractive; apt-get update; apt-get install --no-install-{recommends,suggests} -y apache2 ca-certificates libapache2-mod-php7.4 libldap-common locales-all php-{imagick,redis} php7.4-{bcmath,bz2,common,curl,dba,enchant,gd,gmp,imap,interbase,intl,json,ldap,mbstring,mysql,odbc,opcache,pgsql,pspell,readline,snmp,soap,sqlite3,sybase,tidy,xml,xmlrpc,xsl,zip}; apt-get clean; rm -vrf /var/lib/apt/lists/*"]
@@ -33,9 +50,7 @@ RUN ["install", "-o", "www-data", "-g", "www-data", "-d", "/data"]
 
 ENTRYPOINT ["/entrypoint"]
 
-COPY icingaweb2 /usr/share/icingaweb2
-COPY icinga-php /usr/share/icinga-php
-COPY icinga-L10n /usr/share/icinga-L10n
+COPY --from=usr-share /usr-share/. /usr/share/
 COPY php.ini /etc/php/7.4/cli/conf.d/99-docker.ini
 
 RUN ["ln", "-vs", "/usr/share/icingaweb2/bin/icingacli", "/usr/local/bin/"]
