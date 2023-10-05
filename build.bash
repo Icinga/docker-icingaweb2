@@ -4,12 +4,12 @@ set -exo pipefail
 
 IW2SRC="$1"
 export BUILD_MODE="${2:-release}"
-ACTION="$3"
+ACTION="${3:-local}"
 TAG="${4:-test}"
 
 if [ -z "$IW2SRC" ]; then
 	cat <<EOF >&2
-Usage: ${0} /icingaweb2/source/dir
+Usage: ${0} /icingaweb2/source/dir [release|snapshot [local|all|push [TAG]]]
 EOF
 
 	false
