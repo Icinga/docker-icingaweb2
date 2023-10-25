@@ -10,6 +10,12 @@ runs:
     - uses: actions/checkout@v3
 
     - shell: bash
+      run: sudo apt-get update
+
+    - shell: bash
+      run: sudo apt-get install -y qemu-user-static binfmt-support
+
+    - shell: bash
       run: docker buildx create --use
 
     - if: inputs.dockerhub-token != ''
@@ -22,20 +28,15 @@ runs:
     - if: github.event_name == 'release'
       shell: bash
       run: |
-        TAG="$(tr -d v <<<'${{ github.ref_name }}')"
-        '${{ github.action_path }}/build.bash' .
-        docker tag icinga/icingaweb2 "icinga/icingaweb2:$TAG"
-        docker push "icinga/icingaweb2:$TAG"
+        '${{ github.action_path }}/build.bash' . release push "$(tr -d v <<<'${{ github.ref_name }}')"
+        '${{ github.action_path }}/mktags.bash' '${{ github.ref_name }}'
 
     - if: github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
       shell: bash
       run: |
-        TAG="$(tr / - <<<'${{ github.ref_name }}')"
-        '${{ github.action_path }}/build.bash' . snapshot
-        docker tag icinga/icingaweb2 "icinga/icingaweb2:$TAG"
-        docker push "icinga/icingaweb2:$TAG"
+        '${{ github.action_path }}/build.bash' . snapshot push "$(tr / - <<<'${{ github.ref_name }}')"
 
     - if: github.event_name != 'release' && github.event_name != 'workflow_dispatch' && github.event_name != 'schedule'
       shell: bash
       run: |
-        '${{ github.action_path }}/build.bash' . snapshot
+        '${{ github.action_path }}/build.bash' . snapshot all
