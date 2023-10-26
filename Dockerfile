@@ -1,6 +1,6 @@
 # Icinga Web 2 Docker image | (c) 2020 Icinga GmbH | GPLv2+
 
-FROM golang:bullseye as entrypoint
+FROM golang:bookworm as entrypoint
 
 COPY entrypoint /entrypoint
 
@@ -25,9 +25,9 @@ COPY --from=icingaweb2-git . /icingaweb2-src/.git
 RUN git -C /icingaweb2-src archive --prefix=icingaweb2/ HEAD |tar -x
 
 
-FROM debian:bullseye-slim
+FROM debian:bookworm-slim
 
-RUN ["bash", "-exo", "pipefail", "-c", "export DEBIAN_FRONTEND=noninteractive; apt-get update; apt-get install --no-install-{recommends,suggests} -y apache2 ca-certificates libapache2-mod-php7.4 libldap-common locales-all php-{imagick,redis} php7.4-{bcmath,bz2,common,curl,dba,enchant,gd,gmp,imap,interbase,intl,json,ldap,mbstring,mysql,odbc,opcache,pgsql,pspell,readline,snmp,soap,sqlite3,sybase,tidy,xml,xmlrpc,xsl,zip}; apt-get clean; rm -vrf /var/lib/apt/lists/*"]
+RUN ["bash", "-exo", "pipefail", "-c", "export DEBIAN_FRONTEND=noninteractive; apt-get update; apt-get install --no-install-{recommends,suggests} -y apache2 ca-certificates libapache2-mod-php8.2 libldap-common locales-all php-{imagick,redis} php8.2-{bcmath,bz2,common,curl,dba,enchant,gd,gmp,imap,interbase,intl,ldap,mbstring,mysql,odbc,opcache,pgsql,pspell,readline,snmp,soap,sqlite3,sybase,tidy,xml,xmlrpc,xsl,zip}; apt-get clean; rm -vrf /var/lib/apt/lists/*"]
 
 COPY --from=entrypoint /entrypoint/entrypoint /entrypoint
 COPY entrypoint/db-init /entrypoint-db-init
@@ -51,7 +51,7 @@ RUN ["install", "-o", "www-data", "-g", "www-data", "-d", "/data"]
 ENTRYPOINT ["/entrypoint"]
 
 COPY --from=usr-share /usr-share/. /usr/share/
-COPY php.ini /etc/php/7.4/cli/conf.d/99-docker.ini
+COPY php.ini /etc/php/8.2/cli/conf.d/99-docker.ini
 
 RUN ["ln", "-vs", "/usr/share/icingaweb2/bin/icingacli", "/usr/local/bin/"]
 RUN ["icingacli", "setup", "config", "webserver", "apache", "--path=/", "--file=/etc/apache2/conf-enabled/icingaweb2.conf"]
