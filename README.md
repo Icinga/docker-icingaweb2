@@ -77,6 +77,10 @@ option = value
 Consult the [Icinga Web 2 configuration documentation]
 on which .ini files there are.
 
+### External authentication
+
+When using `icingaweb.authentication.autologin.backend: external`, the Username needs to be passed in the `X-Remote-User` header.
+
 ## Build it yourself
 
 ```bash
