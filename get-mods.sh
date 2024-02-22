@@ -92,3 +92,5 @@ get_mod pdfexport
 get_mod reporting
 get_mod vspheredb
 get_mod x509
+# Icinga Kubernetes Web does not yet have a release, but should also be included:
+MODE=${MODE/release/snapshot} get_altname icinga-kubernetes-web kubernetes
