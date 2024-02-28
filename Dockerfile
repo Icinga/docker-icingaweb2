@@ -55,6 +55,7 @@ COPY php.ini /etc/php/7.4/cli/conf.d/99-docker.ini
 
 RUN ["ln", "-vs", "/usr/share/icingaweb2/bin/icingacli", "/usr/local/bin/"]
 RUN ["icingacli", "setup", "config", "webserver", "apache", "--path=/", "--file=/etc/apache2/conf-enabled/icingaweb2.conf"]
+RUN echo 'SetEnvIf X-REMOTE-USER "(.*)" REMOTE_USER=$0' > /etc/apache2/conf-enabled/allow-remote-user.conf
 
 USER www-data
 ENV ICINGAWEB_OFFICIAL_DOCKER_IMAGE 1
