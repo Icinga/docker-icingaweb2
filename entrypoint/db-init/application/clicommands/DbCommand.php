@@ -47,16 +47,16 @@ class DbCommand extends Command
 
     public function initializedAction()
     {
-        echo (int) (array_search('icingaweb_group', $this->getDb()->listTables(), true) !== false);
+        echo (int) (array_search('icingaweb_group', $this->getDb()->conn->listTables(), true) !== false);
     }
 
     public function initAction()
     {
         $db = $this->getDb();
 
-        $db->import(
+        $db->conn->import(
             Config::module('setup')
-                ->get('schema', 'path', Icinga::app()->getBaseDir('schema')) . "/{$db->dbType}.schema.sql"
+                ->get('schema', 'path', Icinga::app()->getBaseDir('schema')) . "/{$db->type}.schema.sql"
         );
     }
 
@@ -78,7 +78,7 @@ class DbCommand extends Command
     }
 
     /**
-     * @return DbTool
+     * @return \stdClass
      */
     protected function getDb()
     {
@@ -111,7 +111,10 @@ class DbCommand extends Command
 
         $db = new DbTool($config);
         $db->connectToDb();
-        $db->dbType = $type;
-        return $db;
+
+        return (object) [
+            'conn'  => $db,
+            'type'  => $type
+        ];
     }
 }
