@@ -88,6 +88,7 @@ get_altname icingadb-web icingadb
 get_mod idoreports
 get_mod incubator
 get_special L10n icinga-L10n
+get_altname icinga-notifications-web notifications
 get_mod pdfexport
 get_mod reporting
 get_mod vspheredb
