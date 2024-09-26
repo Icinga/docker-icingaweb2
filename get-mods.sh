@@ -87,11 +87,10 @@ get_mod graphite
 get_altname icingadb-web icingadb
 get_mod idoreports
 get_mod incubator
+get_altname icinga-kubernetes-web kubernetes
 get_special L10n icinga-L10n
 get_altname icinga-notifications-web notifications
 get_mod pdfexport
 get_mod reporting
 get_mod vspheredb
 get_mod x509
-# Icinga Kubernetes Web does not yet have a release, but should also be included:
-MODE=${MODE/release/snapshot} get_altname icinga-kubernetes-web kubernetes
