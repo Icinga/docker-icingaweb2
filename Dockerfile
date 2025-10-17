@@ -59,4 +59,6 @@ RUN echo 'SetEnvIf X-REMOTE-USER "(.*)" REMOTE_USER=$0' > /etc/apache2/conf-enab
 
 USER www-data
 ENV ICINGAWEB_OFFICIAL_DOCKER_IMAGE 1
+
+RUN ["bash", "-eo", "pipefail", "-c", "[[ ${icingaweb.enabledModules} == *\"director\"* ]] && icingacli director daemon run"]
 CMD ["bash", "-eo", "pipefail", "-c", ". /etc/apache2/envvars; exec apache2 -DFOREGROUND"]
