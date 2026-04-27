@@ -7,7 +7,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/go-ini/ini"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -47,9 +46,18 @@ func entrypoint() error {
 			}
 		}
 
+		{
+			enMod := path.Join(enModsDir, "dockerentrypoint")
+			if errSl := os.Symlink("/entrypoint-db-init", enMod); errSl != nil && !os.IsExist(errSl) {
+				return errSl
+			}
+
+			defer os.Remove(enMod)
+		}
+
 		logf("debug", "Translating env vars to .ini config")
 
-		cfgs := map[string]*ini.File{}
+		cfgs := map[string]map[string]map[string]string{}
 		var enabledModules map[string]struct{} = nil
 		passwords := map[string]map[string]string{}
 
@@ -91,16 +99,19 @@ func entrypoint() error {
 								cfg, ok := cfgs[file]
 
 								if !ok {
-									cfg = ini.Empty()
+									cfg = map[string]map[string]string{}
 									cfgs[file] = cfg
 								}
 
-								_, errNK := cfg.Section(directive[len(directive)-2]).NewKey(
-									directive[len(directive)-1], kv[1],
-								)
-								if errNK != nil {
-									return errNK
+								sectionName := directive[len(directive)-2]
+								section, hasSection := cfg[sectionName]
+
+								if !hasSection {
+									section = map[string]string{}
+									cfg[sectionName] = section
 								}
+
+								section[directive[len(directive)-1]] = kv[1]
 							}
 						}
 					}
@@ -116,7 +127,23 @@ func entrypoint() error {
 				return errMA
 			}
 
-			if errST := cfg.SaveTo(file); errST != nil {
+			jsn := &bytes.Buffer{}
+			ini := &bytes.Buffer{}
+
+			if err := json.NewEncoder(jsn).Encode(cfg); err != nil {
+				return err
+			}
+
+			cmd := exec.Command("icingacli", "dockerentrypoint", "config", "render")
+			cmd.Stdin = jsn
+			cmd.Stdout = ini
+			cmd.Stderr = os.Stderr
+
+			if errRn := cmd.Run(); errRn != nil {
+				return errRn
+			}
+
+			if errST := os.WriteFile(file, ini.Bytes(), 0o640); errST != nil {
 				return errST
 			}
 		}
@@ -128,6 +155,8 @@ func entrypoint() error {
 			if errRD != nil {
 				return errRD
 			}
+
+			enabledModules["dockerentrypoint"] = struct{}{}
 
 			for _, mod := range mods {
 				mod := mod.Name()
@@ -174,15 +203,6 @@ func entrypoint() error {
 
 func initDb(passwords map[string]map[string]string) error {
 	logf("info", "Checking database resources used as backends")
-
-	{
-		enMod := path.Join(enModsDir, "dockerentrypoint")
-		if errSl := os.Symlink("/entrypoint-db-init", enMod); errSl != nil {
-			return errSl
-		}
-
-		defer os.Remove(enMod)
-	}
 
 	{
 		enMod := path.Join(enModsDir, "setup")
