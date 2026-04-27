@@ -25,13 +25,13 @@ runs:
       run: |
         docker login -u icingaadmin --password-stdin <<<"$PW"
 
-    - if: github.event_name == 'release'
+    - if: github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && github.ref_type == 'tag')
       shell: bash
       run: |
         '${{ github.action_path }}/build.bash' . release push "$(tr -d v <<<'${{ github.ref_name }}')"
         '${{ github.action_path }}/mktags.bash' '${{ github.ref_name }}'
 
-    - if: github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
+    - if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && github.ref_type != 'tag')
       shell: bash
       run: |
         '${{ github.action_path }}/build.bash' . snapshot push "$(tr / - <<<'${{ github.ref_name }}')"
