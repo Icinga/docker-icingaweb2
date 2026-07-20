@@ -1,0 +1,19 @@
+# Icinga Web 2 Docker image | (c) 2026 Icinga GmbH | GPLv3+
+#
+# This is a "Caddyfile": the config format for the Caddy web server that
+# FrankenPHP is built on top of. FrankenPHP embeds the PHP interpreter
+# directly into Caddy, so there is no separate Apache/PHP-FPM process.
+#
+# Full syntax reference: https://caddyserver.com/docs/caddyfile
+# FrankenPHP-specific directives: https://frankenphp.dev/docs/config
+
+:8080 {
+	# Turn on access logging: one JSON line per HTTP request to stderr.
+	log
+
+	root /usr/share/icingaweb2/public
+
+	php_server {
+		env REMOTE_USER {http.request.header.X-Remote-User}
+	}
+}
