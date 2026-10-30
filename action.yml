@@ -36,6 +36,14 @@ runs:
       run: |
         '${{ github.action_path }}/build.bash' . snapshot push "$(tr / - <<<'${{ github.ref_name }}')"
 
+    - if: github.event_name == 'schedule'
+      shell: bash
+      run: |
+        TAG="$(git ls-remote --tags --refs origin 'v*' | cut -f2 | sed 's~^refs/tags/~~' | sort -V | tail -n1)"
+        git fetch --depth=1 origin "refs/tags/$TAG:refs/tags/$TAG"
+        git -c advice.detachedHead=false checkout "$TAG"
+        '${{ github.action_path }}/build.bash' . release push latest
+
     - if: github.event_name != 'release' && github.event_name != 'workflow_dispatch' && github.event_name != 'schedule'
       shell: bash
       run: |
