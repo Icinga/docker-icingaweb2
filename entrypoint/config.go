@@ -3,10 +3,14 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"os"
 	"os/exec"
 	"path"
+	"regexp"
+	"strconv"
 
+	"github.com/go-ini/ini"
 	"github.com/wk8/go-ordered-map/v2"
 )
 
@@ -17,12 +21,13 @@ func renderConfigs(cfgs map[string]*orderedmap.OrderedMap[string, map[string]str
 	}
 	defer os.RemoveAll(tempDir)
 
-	renderedConfig := path.Join(tempDir, "rendered-config")
+	webConfig := path.Join(tempDir, "rendered-config")
+	legacyConfig := path.Join(tempDir, "legacy-config")
 	icingawebConfigdir := path.Join(tempDir, "bootstrap-config")
 	enModsDir := path.Join(icingawebConfigdir, "enabledModules")
 	env := append(os.Environ(), "ICINGAWEB_CONFIGDIR="+icingawebConfigdir)
 
-	for _, dir := range []string{enModsDir, renderedConfig} {
+	for _, dir := range []string{enModsDir, webConfig, legacyConfig} {
 		if err := os.MkdirAll(dir, dirMode); err != nil {
 			return err
 		}
@@ -34,16 +39,19 @@ func renderConfigs(cfgs map[string]*orderedmap.OrderedMap[string, map[string]str
 
 	for name, cfg := range cfgs {
 		relative := name + ".ini"
-		absolute := path.Join(renderedConfig, relative)
+		absolute := path.Join(webConfig, relative)
+		legacy := path.Join(legacyConfig, relative)
 
 		logf("trace1", "Rendering %#v", relative)
 
-		if err := os.MkdirAll(path.Dir(absolute), dirMode); err != nil {
-			return err
+		for _, dir := range []string{absolute, legacy} {
+			if err := os.MkdirAll(path.Dir(dir), dirMode); err != nil {
+				return err
+			}
 		}
 
 		jsn := &bytes.Buffer{}
-		ini := &bytes.Buffer{}
+		webCfg := &bytes.Buffer{}
 
 		if err := json.NewEncoder(jsn).Encode(cfg); err != nil {
 			return err
@@ -53,19 +61,56 @@ func renderConfigs(cfgs map[string]*orderedmap.OrderedMap[string, map[string]str
 
 		cmd.Env = env
 		cmd.Stdin = jsn
-		cmd.Stdout = ini
+		cmd.Stdout = webCfg
 		cmd.Stderr = os.Stderr
 
 		if err := cmd.Run(); err != nil {
 			return err
 		}
 
-		if err := os.WriteFile(absolute, ini.Bytes(), 0o640); err != nil {
+		if err := os.WriteFile(absolute, webCfg.Bytes(), 0o640); err != nil {
+			return err
+		}
+
+		legacyIni := ini.Empty()
+
+		for pair := cfg.Oldest(); pair != nil; pair = pair.Next() {
+			section := legacyIni.Section(pair.Key)
+
+			for k, v := range pair.Value {
+				if _, err := section.NewKey(k, v); err != nil {
+					return err
+				}
+			}
+		}
+
+		if err := legacyIni.SaveTo(legacy); err != nil {
 			return err
 		}
 	}
 
-	return installConfigs(cfgs, renderedConfig)
+	compat := os.Getenv("ICINGAWEB_SERIALIZER_COMPAT")
+	if compat == "" {
+		atLeast215, err15 := icingawebAtLeast(2, 15)
+		if err15 != nil {
+			return err15
+		}
+
+		if atLeast215 {
+			compat = "0"
+		} else {
+			compat = "1"
+		}
+	}
+
+	switch compat {
+	case "1":
+		return installConfigs(cfgs, legacyConfig)
+	case "0":
+		return installConfigs(cfgs, webConfig)
+	default:
+		return fmt.Errorf("bad ICINGAWEB_SERIALIZER_COMPAT (expected 1 or 0): %#v", compat)
+	}
 }
 
 // installConfigs copies the rendered .ini files from renderedConfig to confDir.
@@ -92,4 +137,27 @@ func installConfigs(cfgs map[string]*orderedmap.OrderedMap[string, map[string]st
 	}
 
 	return nil
+}
+
+var icingawebVersion = regexp.MustCompile(`\Av(\d+)\.(\d+)\.`)
+
+// icingawebAtLeast tells whether the installed Icinga Web is at least major.minor.
+func icingawebAtLeast(major, minor int) (bool, error) {
+	file := "/usr/share/icingaweb2/VERSION"
+
+	version, errRF := os.ReadFile(file)
+	if errRF != nil {
+		return false, errRF
+	}
+
+	match := icingawebVersion.FindSubmatch(version)
+	if match == nil {
+		return false, fmt.Errorf("can't find Icinga Web version in %#v", file)
+	}
+
+	// The regex guarantees valid numbers
+	actualMajor, _ := strconv.Atoi(string(match[1]))
+	actualMinor, _ := strconv.Atoi(string(match[2]))
+
+	return actualMajor > major || actualMajor == major && actualMinor >= minor, nil
 }
