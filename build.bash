@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Icinga Web 2 Docker image | (c) 2020 Icinga GmbH | GPLv2+
 set -exo pipefail
 
