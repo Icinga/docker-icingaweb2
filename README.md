@@ -71,11 +71,71 @@ files like `/data/etc/icingaweb2/dir/subdir/file.ini` with content like this:
 
 ```ini
 [section]
-option = value
+option = "value"
+```
+
+Icinga Web 2 itself renders these files. It always quotes the values
+and escapes any `"` and `\` in them, so special characters need no INI quoting.
+`icingaweb.roles.Administrators.permissions='*'` from the example above becomes:
+
+```ini
+[Administrators]
+permissions = "*"
 ```
 
 Consult the [Icinga Web 2 configuration documentation]
 on which .ini files there are.
+
+#### `ICINGAWEB_SERIALIZER_COMPAT`
+
+Older images wrote the .ini files with a different serializer
+which Icinga Web 2 didn't always interpret as intended.
+For example, a value containing a backtick ended up with extra `""` at both ends.
+`ICINGAWEB_SERIALIZER_COMPAT` chooses which serializer to use:
+
+* `0`: Icinga Web 2 renders the .ini files as described above.
+  This is the default for images with Icinga Web 2 v2.15.0 or later.
+* `1`: The old serializer renders the .ini files.
+  This is the default for images with older Icinga Web 2 versions,
+  so that rebuilds of them don't change their behavior.
+
+With `1`, the container logs a warning for every option
+which Icinga Web 2 would interpret differently with `0`, for example:
+
+`Icinga Web would interpret option "password" in section "icingaweb_db" of "resources.ini" differently with v2.15 or ICINGAWEB_SERIALIZER_COMPAT=0`
+
+To not leak secrets, the warning doesn't show the values.
+
+#### Migrating to `ICINGAWEB_SERIALIZER_COMPAT=0`
+
+1. Start the container with `ICINGAWEB_SERIALIZER_COMPAT=1` and check the log for the warnings above.
+2. If you put INI quote characters into values to work around the old serializer,
+   e.g. `password="123456"` with the `"` being part of the value, remove them.
+   Icinga Web 2 quotes all values by itself and would keep such characters as part of the value.
+3. Start the container with `ICINGAWEB_SERIALIZER_COMPAT=0` (or without it, as of v2.15.0).
+
+Shell or YAML quoting is a different thing. Your shell or YAML parser removes it,
+so it never reaches the container. Keep it where your shell or YAML needs it:
+
+```bash
+# The shell removes the single quotes. The value is 123#456. Keep them.
+-e 'icingaweb.resources.icingaweb_db.password=123#456'
+# The value is "123#456" including the double quotes. Remove these.
+-e 'icingaweb.resources.icingaweb_db.password="123#456"'
+```
+
+```yaml
+environment:
+  # YAML removes the single quotes. The value is *. Keep them.
+  icingaweb.roles.Administrators.permissions: '*'
+```
+
+#### Known limitation: leading and trailing whitespace
+
+Icinga Web 2 strips leading and trailing whitespace from values when rendering .ini files.
+This includes passwords, e.g. `icingaweb.resources.icingaweb_db.password`.
+So with `ICINGAWEB_SERIALIZER_COMPAT=0`, ` 123456 ` becomes `123456`.
+Avoid such values.
 
 ### External authentication
 
