@@ -105,6 +105,7 @@ func renderConfigs(cfgs map[string]*orderedmap.OrderedMap[string, map[string]str
 
 	switch compat {
 	case "1":
+		diffConfigs(env, cfgs, legacyConfig, webConfig)
 		return installConfigs(cfgs, legacyConfig)
 	case "0":
 		return installConfigs(cfgs, webConfig)
@@ -137,6 +138,63 @@ func installConfigs(cfgs map[string]*orderedmap.OrderedMap[string, map[string]st
 	}
 
 	return nil
+}
+
+// diffConfigs warns about every option which Icinga Web interprets differently in the old/new rendering.
+// Files which don't parse are silently skipped.
+func diffConfigs(
+	env []string, cfgs map[string]*orderedmap.OrderedMap[string, map[string]string], legacyConfig, webConfig string,
+) {
+	for name := range cfgs {
+		relative := name + ".ini"
+
+		oldCfg, errP1 := parseConfig(env, path.Join(legacyConfig, relative))
+		if errP1 != nil {
+			continue
+		}
+
+		newCfg, errP2 := parseConfig(env, path.Join(webConfig, relative))
+		if errP2 != nil {
+			continue
+		}
+
+		for section, oldSection := range oldCfg {
+			newSection := newCfg[section]
+
+			for option, oldValue := range oldSection {
+				newValue, ok := newSection[option]
+
+				if ok && newValue != oldValue {
+					logf(
+						"warn", "Icinga Web would interpret option %#v in section %#v of %#v differently "+
+							"with v2.15 or ICINGAWEB_SERIALIZER_COMPAT=0",
+						option, section, relative,
+					)
+				}
+			}
+		}
+	}
+}
+
+// parseConfig lets Icinga Web parse the .ini file and returns its interpretation.
+func parseConfig(env []string, file string) (map[string]map[string]string, error) {
+	jsn := &bytes.Buffer{}
+	cmd := exec.Command("icingacli", "dockerentrypoint", "config", "parse", "--file", file)
+
+	cmd.Env = env
+	cmd.Stdout = jsn
+	cmd.Stderr = os.Stderr
+
+	if err := cmd.Run(); err != nil {
+		return nil, err
+	}
+
+	var cfg map[string]map[string]string
+	if err := json.Unmarshal(jsn.Bytes(), &cfg); err != nil {
+		return nil, err
+	}
+
+	return cfg, nil
 }
 
 var icingawebVersion = regexp.MustCompile(`\Av(\d+)\.(\d+)\.`)

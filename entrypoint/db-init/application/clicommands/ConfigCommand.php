@@ -14,4 +14,9 @@ class ConfigCommand extends Command
     {
         echo Config::fromArray(Json::decode(file_get_contents('php://stdin'), true));
     }
+
+    public function parseAction(): void
+    {
+        echo Json::encode(Config::fromIni($this->params->getRequired('file'))->toArray(), JSON_FORCE_OBJECT);
+    }
 }
