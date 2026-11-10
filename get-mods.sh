@@ -36,10 +36,9 @@ get_special () {
 				;;
 			snapshot)
 				case "$2" in
-					icingaweb2/modules/incubator)
-						# "HINT: Do NOT install the GIT master, it will not work!"
-						# https://github.com/Icinga/icingaweb2-module-incubator/blob/master/README.md
-						REF="$(get_tag)"
+					icinga-php/legacy)
+						# Special branch that contains vendored dependencies missing in HEAD
+						REF=snapshot
 						;;
 					icinga-php/*)
 						# Special branch that contains vendored dependencies missing in HEAD
@@ -75,6 +74,7 @@ case "$MODE" in
 	*) usage ;;
 esac
 
+get_lib legacy legacy
 get_lib library ipl
 get_lib thirdparty vendor
 get_mod audit
@@ -86,7 +86,6 @@ get_mod fileshipper
 get_mod graphite
 get_altname icingadb-web icingadb
 get_mod idoreports
-get_mod incubator
 get_altname icinga-kubernetes-web kubernetes
 get_special L10n icinga-L10n
 get_altname icinga-notifications-web notifications
