@@ -7,7 +7,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/go-ini/ini"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -16,6 +15,8 @@ import (
 	"strings"
 	"syscall"
 	"time"
+
+	"github.com/wk8/go-ordered-map/v2"
 )
 
 const confDir = "/data/etc/icingaweb2"
@@ -49,7 +50,7 @@ func entrypoint() error {
 
 		logf("debug", "Translating env vars to .ini config")
 
-		cfgs := map[string]*ini.File{}
+		cfgs := map[string]*orderedmap.OrderedMap[string, map[string]string]{}
 		var enabledModules map[string]struct{} = nil
 		passwords := map[string]map[string]string{}
 
@@ -91,16 +92,19 @@ func entrypoint() error {
 								cfg, ok := cfgs[file]
 
 								if !ok {
-									cfg = ini.Empty()
+									cfg = orderedmap.New[string, map[string]string]()
 									cfgs[file] = cfg
 								}
 
-								_, errNK := cfg.Section(directive[len(directive)-2]).NewKey(
-									directive[len(directive)-1], kv[1],
-								)
-								if errNK != nil {
-									return errNK
+								sectionName := directive[len(directive)-2]
+								section, hasSection := cfg.Get(sectionName)
+
+								if !hasSection {
+									section = map[string]string{}
+									cfg.Set(sectionName, section)
 								}
+
+								section[directive[len(directive)-1]] = kv[1]
 							}
 						}
 					}
@@ -108,17 +112,8 @@ func entrypoint() error {
 			}
 		}
 
-		for file, cfg := range cfgs {
-			file = path.Join(confDir, file+".ini")
-			logf("trace1", "Writing %#v", file)
-
-			if errMA := os.MkdirAll(path.Dir(file), dirMode); errMA != nil {
-				return errMA
-			}
-
-			if errST := cfg.SaveTo(file); errST != nil {
-				return errST
-			}
+		if err := renderConfigs(cfgs); err != nil {
+			return err
 		}
 
 		if enabledModules != nil {
