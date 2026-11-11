@@ -92,6 +92,13 @@ git clone https://github.com/Icinga/icingaweb2.git
 ./build.bash ./icingaweb2
 ```
 
+To use a Docker-compatible CLI other than `docker`, e.g. Podman,
+pass it as the fifth argument:
+
+```bash
+./build.bash ./icingaweb2 release local test podman
+```
+
 [Icinga Web 2]: https://github.com/Icinga/icingaweb2
 [Docker]: https://www.docker.com
 [Icinga Web 2 configuration documentation]: https://icinga.com/docs/icingaweb2/latest/doc/03-Configuration/
