@@ -6,6 +6,7 @@ IW2SRC="$1"
 export BUILD_MODE="${2:-release}"
 ACTION="${3:-local}"
 TAG="${4:-test}"
+DOCKER="${5:-docker}"
 
 if [ -z "$IW2SRC" ]; then
 	cat <<EOF >&2
@@ -15,19 +16,19 @@ EOF
 	false
 fi
 
-if ! docker version; then
-	echo 'Docker not found' >&2
+if ! "$DOCKER" version; then
+	echo "$DOCKER not found" >&2
 	false
 fi
 
-if ! docker buildx version; then
-	echo '"docker buildx" not found (see https://docs.docker.com/buildx/working-with-buildx/ )' >&2
+if ! "$DOCKER" buildx version; then
+	echo "'$DOCKER buildx' not found (see https://docs.docker.com/buildx/working-with-buildx/ )" >&2
 	false
 fi
 
 OUR_DIR="$(realpath "$(dirname "$0")")"
 COMMON_ARGS=(-t "icinga/icingaweb2:$TAG" --build-context "icingaweb2-git=$(realpath "$IW2SRC")/.git/" --build-arg "BUILD_MODE=$BUILD_MODE" "$OUR_DIR")
-BUILDX=(docker buildx build --platform "$(cat "${OUR_DIR}/platforms.txt")")
+BUILDX=("$DOCKER" buildx build --platform "$(cat "${OUR_DIR}/platforms.txt")")
 
 case "$ACTION" in
 	all)
@@ -37,6 +38,6 @@ case "$ACTION" in
 		"${BUILDX[@]}" --push "${COMMON_ARGS[@]}"
 		;;
 	*)
-		docker buildx build --load "${COMMON_ARGS[@]}"
+		"$DOCKER" buildx build --load "${COMMON_ARGS[@]}"
 		;;
 esac
