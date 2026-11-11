@@ -115,7 +115,7 @@ func renderConfigs(cfgs map[string]*orderedmap.OrderedMap[string, map[string]str
 }
 
 // installConfigs copies the rendered .ini files from renderedConfig to confDir.
-// Neither chmod existing directories nor existing files.
+// It preserves the permissions of existing directories and files.
 func installConfigs(cfgs map[string]*orderedmap.OrderedMap[string, map[string]string], renderedConfig string) error {
 	for name := range cfgs {
 		relative := name + ".ini"

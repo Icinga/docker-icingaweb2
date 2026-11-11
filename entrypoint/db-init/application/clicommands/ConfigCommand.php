@@ -17,6 +17,9 @@ class ConfigCommand extends Command
 
     public function parseAction(): void
     {
-        echo Json::encode(Config::fromIni($this->params->getRequired('file'))->toArray(), JSON_FORCE_OBJECT);
+        echo json_encode(
+            Config::fromIni($this->params->getRequired('file'))->toArray(),
+            JSON_FORCE_OBJECT | JSON_THROW_ON_ERROR
+        );
     }
 }
