@@ -65,6 +65,7 @@ of the only modules to be enabled.
 Variables like `icingaweb.passwords.backend.user=pass`
 ensures a user "user" with the password "pass" to be present
 in the database authentication backend "backend".
+The latter must be created separately.
 
 Variables like `icingaweb.dir.subdir.file.section.option=value` create .ini
 files like `/data/etc/icingaweb2/dir/subdir/file.ini` with content like this:
